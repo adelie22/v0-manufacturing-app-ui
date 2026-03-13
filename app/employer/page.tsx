@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,9 @@ import {
   Star,
   Calendar,
   Truck,
-  Building2
+  Building2,
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react"
 
 // Mock data
@@ -122,6 +125,31 @@ export default function EmployerDashboard() {
               <p className="text-lg text-slate-500 mt-2">건</p>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Safety Zone Monitor Link */}
+        <section>
+          <Link href="/employer/safety-zone">
+            <Card className="border-2 border-amber-200 bg-amber-50 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center">
+                      <ShieldCheck className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-semibold text-amber-800">안전 구역 모니터</h3>
+                      <p className="text-lg text-amber-600">일용직 근무일수 관리 및 4대보험 비용 계산</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-6 w-6 text-amber-500" />
+                    <span className="text-lg font-medium text-amber-700">3명 주의</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </section>
 
         {/* Quick Job Posting Button */}
