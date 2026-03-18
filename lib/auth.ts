@@ -11,7 +11,7 @@ const NaverProvider = {
   type: "oauth" as const,
   authorization: {
     url: "https://nid.naver.com/oauth2.0/authorize",
-    params: { scope: "" },
+    params: { response_type: "code" },
   },
   token: "https://nid.naver.com/oauth2.0/token",
   userinfo: {
