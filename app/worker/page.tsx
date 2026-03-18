@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -142,7 +143,8 @@ const achievements = [
 ]
 
 export default function WorkerMobileApp() {
-  const [darkMode, setDarkMode] = useState(true)
+  const { data: session } = useSession()
+  const [darkMode, setDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState("home")
   const [jobFilter, setJobFilter] = useState("all")
   const [savedJobs, setSavedJobs] = useState<number[]>([2, 5])
@@ -520,11 +522,13 @@ export default function WorkerMobileApp() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src="/placeholder-user.jpg" />
-              <AvatarFallback className="bg-indigo-600 text-white text-xl">민수</AvatarFallback>
+              <AvatarFallback className="bg-indigo-600 text-white text-xl">
+              {(session?.user?.name ?? "U").charAt(0)}
+            </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold">{userData.name}</h2>
-              <p className={`text-sm ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>{userData.email}</p>
+              <h2 className="text-xl font-bold">{session?.user?.name ?? userData.name}</h2>
+              <p className={`text-sm ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>{session?.user?.email ?? userData.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Badge className="bg-indigo-600 text-white">
                   <Trophy className="h-3 w-3 mr-1" />
@@ -642,7 +646,7 @@ export default function WorkerMobileApp() {
             </div>
             <div>
               <p className={`text-sm ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>안녕하세요</p>
-              <p className="font-semibold">{userData.name}님</p>
+              <p className="font-semibold">{session?.user?.name ?? userData.name}님</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

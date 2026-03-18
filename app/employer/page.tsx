@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,7 @@ const trustedWorkers = [
 ]
 
 export default function EmployerDashboard() {
+  const { data: session } = useSession()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [jobForm, setJobForm] = useState({
     date: "",
@@ -72,8 +74,8 @@ export default function EmployerDashboard() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg md:text-xl font-medium">청주제조(주)</p>
-            <p className="text-slate-300 text-base">홍길동 사장님</p>
+            <p className="text-lg md:text-xl font-medium">{session?.user?.name ?? "사장님"}</p>
+            <p className="text-slate-300 text-base">{session?.user?.email ?? ""}</p>
           </div>
         </div>
       </header>
