@@ -195,6 +195,9 @@ export default function HomePage() {
                 </Card>
               </Link>
             </div>
+
+            {/* 공감 슬라이드 */}
+            <AdSlider />
           </div>
         </div>
 
@@ -202,9 +205,6 @@ export default function HomePage() {
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40" />
       </section>
-
-      {/* 공감 슬라이드 섹션 */}
-      <AdSlider />
 
       {/* Feature Section 1 - 당일 지급 */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-background">
