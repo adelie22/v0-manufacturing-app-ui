@@ -127,9 +127,9 @@ export default function HomePage() {
               하루만 일손이 필요할 때
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
-              일손매칭
+              일손매칭과 다음에
               <br />
-              <span className="text-blue-600">함께 해보세요</span>
+              <span className="text-blue-600">함께해보세요</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
               제조업 일용직 매칭 플랫폼.
