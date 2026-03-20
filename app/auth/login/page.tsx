@@ -1,18 +1,34 @@
 "use client"
 
-import { signIn } from "next-auth/react"
-import { useSearchParams } from "next/navigation"
-import { Briefcase } from "lucide-react"
+import { signIn, useSession } from "next-auth/react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
+import Image from "next/image"
 
 function LoginForm() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      router.replace(callbackUrl)
+    }
+  }, [status, session, callbackUrl, router])
 
   const handleLogin = (provider: string) => {
     signIn(provider, { callbackUrl })
+  }
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -21,9 +37,7 @@ function LoginForm() {
         {/* 로고 */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-xl shadow-indigo-200">
-              <Briefcase className="h-10 w-10 text-white" />
-            </div>
+            <Image src="/logo.png" alt="일손매칭" width={80} height={80} className="rounded-2xl object-cover shadow-xl" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">일손매칭</h1>

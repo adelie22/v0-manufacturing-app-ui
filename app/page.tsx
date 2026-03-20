@@ -135,7 +135,7 @@ export default function HomePage() {
 
             {/* Selection Cards - Toss Style */}
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mt-12">
-              <Link href="/employer" className="group">
+              <Link href="/auth/login?callbackUrl=/employer" className="group">
                 <Card className="h-full bg-background border border-border/80 hover:border-blue-300 hover:shadow-lg transition-all duration-300 rounded-3xl overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
@@ -155,7 +155,7 @@ export default function HomePage() {
                 </Card>
               </Link>
 
-              <Link href="/worker" className="group">
+              <Link href="/auth/login?callbackUrl=/worker" className="group">
                 <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 transition-all duration-300 rounded-3xl overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
@@ -551,13 +551,13 @@ export default function HomePage() {
             가입비 무료, 공고 등록 무료
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/employer">
+            <Link href="/auth/login?callbackUrl=/employer">
               <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 rounded-xl h-14 text-base">
                 <Building2 className="h-5 w-5 mr-2" />
                 사장님으로 시작
               </Button>
             </Link>
-            <Link href="/worker">
+            <Link href="/auth/login?callbackUrl=/worker">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-8 rounded-xl h-14 text-base">
                 <Smartphone className="h-5 w-5 mr-2" />
                 구직자로 시작
