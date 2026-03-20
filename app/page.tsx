@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import AiPostingChat from "@/components/AiPostingChat"
 import AdSlider from "@/components/AdSlider"
+import FadeIn from "@/components/FadeIn"
 import {
   Building2,
   Smartphone,
@@ -207,6 +208,7 @@ export default function HomePage() {
       </section>
 
       {/* Feature Section 1 - 당일 지급 */}
+      <FadeIn>
       <section className="px-4 sm:px-6 pt-10 pb-20 md:pt-14 md:pb-28 bg-background">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -264,7 +266,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* Feature Section 2 - 신뢰 등급 */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-50">
         <div className="max-w-6xl mx-auto">
@@ -338,7 +342,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* Feature Section 3 - Safety Zone */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-background">
         <div className="max-w-6xl mx-auto">
@@ -419,7 +425,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* Reviews Section */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-50">
         <div className="max-w-6xl mx-auto">
@@ -482,7 +490,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* Stats Section */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-background">
         <div className="max-w-6xl mx-auto">
@@ -514,7 +524,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* Quick Features */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-50">
         <div className="max-w-6xl mx-auto">
@@ -563,7 +575,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       {/* CTA Section */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-blue-600">
         <div className="max-w-4xl mx-auto text-center">
@@ -589,6 +603,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
       {/* AI 공고 등록 챗봇 */}
       {aiChatOpen && <AiPostingChat onClose={() => setAiChatOpen(false)} />}
