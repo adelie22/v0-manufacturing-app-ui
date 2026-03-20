@@ -39,31 +39,18 @@ export default function AdSlider() {
   const slide = slides[current]
 
   return (
-    <div className="max-w-2xl mx-auto mt-4">
+    <div className="max-w-2xl mx-auto mt-5">
       <div
         className={`grid grid-cols-2 gap-4 transition-all duration-300 ${
           animating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"
         }`}
       >
-        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line text-center">
+        <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-line text-center">
           &ldquo;{slide.employer}&rdquo;
         </p>
-        <p className="text-sm text-blue-200 leading-relaxed whitespace-pre-line text-center">
+        <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-line text-center">
           &ldquo;{slide.worker}&rdquo;
         </p>
-      </div>
-
-      {/* 인디케이터 */}
-      <div className="flex justify-center gap-1.5 mt-3">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === current ? "w-5 bg-blue-400" : "w-1 bg-white/30"
-            }`}
-          />
-        ))}
       </div>
     </div>
   )

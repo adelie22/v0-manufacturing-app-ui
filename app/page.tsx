@@ -207,7 +207,7 @@ export default function HomePage() {
       </section>
 
       {/* Feature Section 1 - 당일 지급 */}
-      <section className="px-4 sm:px-6 py-20 md:py-28 bg-background">
+      <section className="px-4 sm:px-6 pt-10 pb-20 md:pt-14 md:pb-28 bg-background">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
