@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   ChevronDown, MapPin, Calendar, Clock,
-  Users, Wallet, CheckCircle2, ArrowLeft, Plus, X
+  Users, Wallet, CheckCircle2, ArrowLeft, Plus, X, Loader2
 } from "lucide-react"
 
 const CATEGORIES = ["제조/생산", "물류/창고", "식품/음료", "건설/현장", "서비스/기타"]
@@ -49,8 +49,28 @@ export default function PostJobPage() {
     )
   }
 
-  const handleSubmit = () => {
-    setSubmitted(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setSubmitError("")
+    try {
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error ?? "등록에 실패했습니다")
+      }
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "오류가 발생했습니다")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -312,11 +332,13 @@ export default function PostJobPage() {
               다음
             </Button>
           ) : (
-            <Button onClick={handleSubmit}
-              className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold">
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              공고 등록하기
-            </Button>
+            <div className="flex-1 space-y-2">
+              {submitError && <p className="text-red-500 text-sm text-center">{submitError}</p>}
+              <Button onClick={handleSubmit} disabled={submitting}
+                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4 mr-2" />공고 등록하기</>}
+              </Button>
+            </div>
           )}
         </div>
       </div>

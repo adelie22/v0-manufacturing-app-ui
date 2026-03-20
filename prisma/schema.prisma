@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,19 +9,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  phone         String?
-  role          String?   // "employer" | "worker"
-  isProfileComplete Boolean @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  phone             String?
+  role              String?   // "employer" | "worker"
+  isProfileComplete Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
+  accounts     Account[]
+  sessions     Session[]
+  jobPostings  JobPosting[]  @relation("EmployerPostings")
+  applications Application[] @relation("WorkerApplications")
 }
 
 model Account {
@@ -61,4 +60,43 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model JobPosting {
+  id          String @id @default(cuid())
+  employerId  String
+  employer    User   @relation("EmployerPostings", fields: [employerId], references: [id], onDelete: Cascade)
+
+  category    String
+  companyName String
+  location    String
+  date        String
+  startTime   String
+  endTime     String
+  headcount   Int
+  payType     String   // "daily" | "hourly"
+  payAmount   Int
+  instantPay  Boolean  @default(false)
+  pickup      Boolean  @default(false)
+  description String?
+  tasks       String[]
+
+  status    String   @default("active") // "active" | "closed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
+}
+
+model Application {
+  id       String     @id @default(cuid())
+  workerId String
+  worker   User       @relation("WorkerApplications", fields: [workerId], references: [id], onDelete: Cascade)
+  jobId    String
+  job      JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  status    String   @default("pending") // "pending" | "accepted" | "rejected"
+  createdAt DateTime @default(now())
+
+  @@unique([workerId, jobId])
 }
