@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 interface FadeInProps {
   children: React.ReactNode
   className?: string
-  delay?: number // ms
+  delay?: number
 }
 
 export default function FadeIn({ children, className = "", delay = 0 }: FadeInProps) {
@@ -22,7 +22,10 @@ export default function FadeIn({ children, className = "", delay = 0 }: FadeInPr
           observer.disconnect()
         }
       },
-      { threshold: 0.15 }
+      {
+        threshold: 0.08,        // 요소가 8% 보이기 시작할 때 트리거
+        rootMargin: "0px 0px -60px 0px", // 뷰포트 하단 60px 전에는 트리거 안 함
+      }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -31,8 +34,10 @@ export default function FadeIn({ children, className = "", delay = 0 }: FadeInPr
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      className={`transition-all duration-1000 ease-out ${
+        visible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-16"
       } ${className}`}
     >
       {children}
