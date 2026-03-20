@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, FileText, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Eye } from "lucide-react"
+import { ArrowLeft, Download, FileText, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Eye, ExternalLink, Archive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Worker {
@@ -132,7 +132,7 @@ function PreviewWithholding({ d }: { d: TaxData }) {
 function PreviewWork({ d }: { d: TaxData }) {
   return (
     <div className="mt-3 text-xs space-y-3">
-      <p className="text-gray-400">※ 참고용 미리보기 — 근로복지공단 EDI에 제출하세요</p>
+      <p className="text-gray-400">※ 참고용 미리보기 — XML 파일 다운로드 후 토탈서비스에 업로드하세요</p>
       <div className="border border-emerald-200 rounded-xl overflow-hidden">
         <div className="bg-emerald-50 px-3 py-2 font-semibold text-emerald-800">근로내용확인신고서</div>
         <div className="bg-white px-3 py-2 text-gray-600">
@@ -209,18 +209,74 @@ const PREVIEW_MAP = {
   statement:   PreviewStatement,
 }
 
+// 서류별 메타 정보
 const DOCS = [
-  { key: "tax",         label: "세금계산 내역",           desc: "근로자별 세금 상세",         color: "blue"    },
-  { key: "withholding", label: "원천징수이행상황신고서",   desc: "매월 10일 · 홈택스 제출",    color: "orange"  },
-  { key: "work",        label: "근로내용확인신고서",       desc: "매월 15일 · 근복공 제출",    color: "emerald" },
-  { key: "statement",   label: "일용근로소득 지급명세서",  desc: "분기 다음달 말 · 홈택스",    color: "purple"  },
+  {
+    key: "withholding",
+    label: "원천징수이행상황신고서",
+    deadline: "매월 10일까지",
+    color: "orange",
+    fileType: "XLSX",
+    fileLabel: "XLSX 다운로드",
+    submitRequired: true,
+    siteLabel: "홈택스",
+    siteUrl: "https://www.hometax.go.kr",
+    siteNote: "홈택스 → 신고/납부 → 원천세",
+    apiKey: "withholding",
+    fileExt: "xlsx",
+  },
+  {
+    key: "work",
+    label: "근로내용확인신고서",
+    deadline: "매월 15일까지",
+    color: "emerald",
+    fileType: "XML",
+    fileLabel: "XML 다운로드",
+    submitRequired: true,
+    siteLabel: "토탈서비스",
+    siteUrl: "https://total.kcomwel.or.kr",
+    siteNote: "토탈서비스 → 근로내용확인신고",
+    apiKey: "work_xml",
+    fileExt: "xml",
+  },
+  {
+    key: "statement",
+    label: "일용근로소득 지급명세서",
+    deadline: "분기 다음달 말",
+    color: "purple",
+    fileType: "XLSX",
+    fileLabel: "XLSX 다운로드",
+    submitRequired: true,
+    siteLabel: "홈택스",
+    siteUrl: "https://www.hometax.go.kr",
+    siteNote: "홈택스 → 신고/납부 → 지급명세서",
+    apiKey: "statement",
+    fileExt: "xlsx",
+  },
+  {
+    key: "tax",
+    label: "세금계산 내역",
+    deadline: "제출 불필요",
+    color: "blue",
+    fileType: "XLSX",
+    fileLabel: "XLSX 다운로드",
+    submitRequired: false,
+    siteLabel: null,
+    siteUrl: null,
+    siteNote: null,
+    apiKey: "tax",
+    fileExt: "xlsx",
+  },
 ] as const
 
-const COLOR = {
-  blue:    { bg:"bg-blue-50",    text:"text-blue-700",    border:"border-blue-200",    btn:"bg-blue-600 hover:bg-blue-500",       eye:"text-blue-600"    },
-  orange:  { bg:"bg-orange-50",  text:"text-orange-700",  border:"border-orange-200",  btn:"bg-orange-500 hover:bg-orange-400",   eye:"text-orange-500"  },
-  emerald: { bg:"bg-emerald-50", text:"text-emerald-700", border:"border-emerald-200", btn:"bg-emerald-600 hover:bg-emerald-500", eye:"text-emerald-600" },
-  purple:  { bg:"bg-purple-50",  text:"text-purple-700",  border:"border-purple-200",  btn:"bg-purple-600 hover:bg-purple-500",   eye:"text-purple-600"  },
+type DocKey = typeof DOCS[number]["key"]
+type ColorKey = typeof DOCS[number]["color"]
+
+const COLOR: Record<ColorKey, { bg: string; text: string; border: string; btn: string; sitebtn: string; step: string }> = {
+  blue:    { bg:"bg-blue-50",    text:"text-blue-700",    border:"border-blue-200",    btn:"bg-blue-600 hover:bg-blue-500",         sitebtn:"border-blue-300 text-blue-700 hover:bg-blue-50",       step:"bg-blue-100 text-blue-800"    },
+  orange:  { bg:"bg-orange-50",  text:"text-orange-700",  border:"border-orange-200",  btn:"bg-orange-500 hover:bg-orange-400",      sitebtn:"border-orange-300 text-orange-700 hover:bg-orange-50", step:"bg-orange-100 text-orange-800" },
+  emerald: { bg:"bg-emerald-50", text:"text-emerald-700", border:"border-emerald-200", btn:"bg-emerald-600 hover:bg-emerald-500",    sitebtn:"border-emerald-300 text-emerald-700 hover:bg-emerald-50", step:"bg-emerald-100 text-emerald-800" },
+  purple:  { bg:"bg-purple-50",  text:"text-purple-700",  border:"border-purple-200",  btn:"bg-purple-600 hover:bg-purple-500",      sitebtn:"border-purple-300 text-purple-700 hover:bg-purple-50", step:"bg-purple-100 text-purple-800"  },
 }
 
 export default function TaxPage() {
@@ -230,7 +286,7 @@ export default function TaxPage() {
   const [data, setData] = useState<TaxData | null>(null)
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState<string | null>(null)
-  const [openPreview, setOpenPreview] = useState<string | null>(null)
+  const [openPreview, setOpenPreview] = useState<DocKey | null>(null)
   const [isMock, setIsMock] = useState(false)
 
   const load = useCallback(() => {
@@ -252,22 +308,22 @@ export default function TaxPage() {
 
   useEffect(() => { load() }, [load])
 
-  const handleDownload = async (type: string) => {
-    setDownloading(type)
-    const res = await fetch(`/api/employer/tax-report?year=${year}&month=${month}&download=${type}`)
+  const handleDownload = async (apiKey: string, fileExt: string, label: string) => {
+    setDownloading(apiKey)
+    const res = await fetch(`/api/employer/tax-report?year=${year}&month=${month}&download=${apiKey}`)
     if (res.ok) {
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `${type}_${year}${String(month).padStart(2, "0")}.xlsx`
+      a.download = `${label}_${year}${String(month).padStart(2, "0")}.${fileExt}`
       a.click()
       URL.revokeObjectURL(url)
     }
     setDownloading(null)
   }
 
-  const togglePreview = (key: string) =>
+  const togglePreview = (key: DocKey) =>
     setOpenPreview(prev => prev === key ? null : key)
 
   return (
@@ -326,9 +382,11 @@ export default function TaxPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-gray-900">{year}년 {month}월 현황</h2>
-                <Button onClick={() => handleDownload("all")} disabled={!!downloading}
+                <Button
+                  onClick={() => handleDownload("all", "xlsx", "전체세금자료")}
+                  disabled={!!downloading}
                   className="h-8 px-3 text-xs bg-gray-900 hover:bg-gray-700 text-white rounded-lg">
-                  {downloading === "all" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <><Download className="h-3.5 w-3.5 mr-1" />전체 엑셀</>}
+                  {downloading === "all" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <><Download className="h-3.5 w-3.5 mr-1" />전체 XLSX</>}
                 </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -358,35 +416,92 @@ export default function TaxPage() {
               ))}
             </div>
 
-            {/* 서류별 미리보기 + 다운로드 */}
+            {/* 서류별 카드 */}
             <div className="space-y-3">
               {DOCS.map(doc => {
                 const c = COLOR[doc.color]
                 const Preview = PREVIEW_MAP[doc.key]
                 const isOpen = openPreview === doc.key
+                const isDownloading = downloading === doc.apiKey
+
                 return (
                   <div key={doc.key} className={`bg-white rounded-2xl border ${c.border} overflow-hidden`}>
-                    <div className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center`}>
-                          <FileText className={`h-5 w-5 ${c.text}`} />
+
+                    {/* 카드 헤더 */}
+                    <div className="p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
+                          {doc.submitRequired
+                            ? <FileText className={`h-5 w-5 ${c.text}`} />
+                            : <Archive className={`h-5 w-5 ${c.text}`} />
+                          }
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900">{doc.label}</p>
-                          <p className="text-xs text-gray-400">{doc.desc}</p>
+                          <p className={`text-xs font-medium mt-0.5 ${doc.submitRequired ? "text-gray-500" : "text-gray-400"}`}>
+                            {doc.deadline}
+                            {!doc.submitRequired && (
+                              <span className="ml-2 inline-flex items-center gap-0.5 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs">
+                                내부 보관용
+                              </span>
+                            )}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => togglePreview(doc.key)}
-                          className={`flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${isOpen ? `${c.bg} ${c.text} border-current` : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+
+                      {/* 2단계 제출 가이드 */}
+                      {doc.submitRequired && doc.siteLabel && (
+                        <div className={`rounded-xl px-3 py-2.5 mb-3 ${c.step}`}>
+                          <div className="flex items-center gap-2 text-xs font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-xs">①</span>
+                              {doc.fileType} 파일 다운로드
+                            </span>
+                            <span className="text-current opacity-50">→</span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-xs">②</span>
+                              {doc.siteLabel}에 업로드
+                            </span>
+                          </div>
+                          {doc.siteNote && (
+                            <p className="text-xs mt-1 opacity-70">{doc.siteNote}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 버튼 행 */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* 파일 다운로드 */}
+                        <Button
+                          onClick={() => handleDownload(doc.apiKey, doc.fileExt, doc.label)}
+                          disabled={!!downloading}
+                          className={`h-8 px-3 text-xs text-white rounded-lg ${c.btn}`}>
+                          {isDownloading
+                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                            : <><Download className="h-3 w-3 mr-1" />{doc.fileLabel}</>
+                          }
+                        </Button>
+
+                        {/* 미리보기 */}
+                        <button
+                          onClick={() => togglePreview(doc.key)}
+                          className={`flex items-center gap-1 text-xs font-medium h-8 px-3 rounded-lg border transition-colors ${isOpen ? `${c.bg} ${c.text} border-current` : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
                           <Eye className="h-3.5 w-3.5" />
                           {isOpen ? "닫기" : "미리보기"}
                           {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         </button>
-                        <Button onClick={() => handleDownload(doc.key)} disabled={!!downloading}
-                          className={`h-8 px-3 text-xs text-white rounded-lg ${c.btn}`}>
-                          {downloading === doc.key ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <><Download className="h-3 w-3 mr-1" />엑셀</>}
-                        </Button>
+
+                        {/* 사이트 바로가기 */}
+                        {doc.siteUrl && (
+                          <a
+                            href={doc.siteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-1 text-xs font-medium h-8 px-3 rounded-lg border transition-colors ${c.sitebtn} ml-auto`}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            {doc.siteLabel} 바로가기
+                          </a>
+                        )}
                       </div>
                     </div>
 

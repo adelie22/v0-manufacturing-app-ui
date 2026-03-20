@@ -78,6 +78,42 @@ export async function GET(req: NextRequest) {
   const totalLocalTax = workers.reduce((s, w) => s + w.localTax, 0)
   const totalTax = workers.reduce((s, w) => s + w.totalTax, 0)
 
+  // 근로내용확인신고서 XML 다운로드 (근로복지공단 토탈서비스 EDI용)
+  if (download === "work_xml") {
+    const ym = `${year}${String(month).padStart(2, "0")}`
+    const xmlLines = [
+      `<?xml version="1.0" encoding="UTF-8"?>`,
+      `<근로내용확인신고서>`,
+      `  <신고기관>일손매칭</신고기관>`,
+      `  <신고년도>${year}</신고년도>`,
+      `  <신고월>${String(month).padStart(2, "0")}</신고월>`,
+      `  <신고기한>${year}년 ${month + 1 > 12 ? 1 : month + 1}월 15일</신고기한>`,
+      `  <총인원>${workers.length}</총인원>`,
+      `  <근로자목록>`,
+      ...workers.flatMap(w => [
+        `    <근로자>`,
+        `      <성명>${w.name}</성명>`,
+        `      <근무일수>${w.days}</근무일수>`,
+        `      <총지급액>${w.totalPay}</총지급액>`,
+        `      <소득세>${w.incomeTax}</소득세>`,
+        `      <지방소득세>${w.localTax}</지방소득세>`,
+        `      <근무일자목록>`,
+        ...w.jobs.map(j => `        <근무일자>${j.date}</근무일자>`),
+        `      </근무일자목록>`,
+        `    </근로자>`,
+      ]),
+      `  </근로자목록>`,
+      `</근로내용확인신고서>`,
+    ]
+    const filename = `근로내용확인신고서_${ym}.xml`
+    return new NextResponse(xmlLines.join("\n"), {
+      headers: {
+        "Content-Type": "application/xml; charset=UTF-8",
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      },
+    })
+  }
+
   // 엑셀 다운로드
   if (download) {
     const wb = XLSX.utils.book_new()
@@ -124,7 +160,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (download === "work" || download === "all") {
-      // 근로내용확인신고서
+      // 근로내용확인신고서 (all에는 엑셀 버전 포함)
       const workRows = [
         ["[근로내용확인신고서]"],
         [`신고기간: ${year}년 ${month}월`],
@@ -136,7 +172,7 @@ export async function GET(req: NextRequest) {
           w.jobs.map(j => j.date).join(", ")
         ]),
         [],
-        ["※ 근로복지공단 EDI에서 제출하세요"],
+        ["※ 근로복지공단 토탈서비스(total.kcomwel.or.kr)에 XML 업로드하세요"],
       ]
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(workRows), "근로내용확인신고서")
     }
