@@ -151,6 +151,28 @@ export default function EmployerDashboard() {
           </Link>
         </section>
 
+        {/* 세금 현황 Card */}
+        <section>
+          <Link href="/employer/tax">
+            <Card className="border-2 border-blue-200 shadow-md bg-blue-50/50 hover:bg-blue-50 transition-colors cursor-pointer group">
+              <CardContent className="py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <DollarSign className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-semibold text-blue-800">세금 · 신고 현황</h3>
+                      <p className="text-base text-blue-600">지급명세서 · 원천징수 · 근로내용 확인</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-7 w-7 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </section>
+
         {/* Quick Job Posting Button */}
         <section>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
