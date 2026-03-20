@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // 로그인 없이 접근 가능한 경로
-const publicPaths = ["/", "/auth/login", "/auth/error", "/api/auth"]
+const publicPaths = ["/", "/auth/login", "/auth/error", "/api/auth", "/jobs"]
 
 export default auth(async function middleware(req: NextRequest & { auth: { user?: { isProfileComplete?: boolean } } | null }) {
   const { pathname } = req.nextUrl

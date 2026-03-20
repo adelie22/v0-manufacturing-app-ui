@@ -42,7 +42,7 @@ export default function HomePage() {
 
   const navItems = [
     { label: "알바찾기", href: "/jobs", icon: Search },
-    { label: "공고등록", href: "/employer", icon: PlusCircle },
+    { label: "공고등록", href: "/employer/post", icon: PlusCircle },
     { label: "무료 근로계약서", href: "/contract", icon: FileText },
     { label: "회사소개", href: "/about", icon: Building2 },
     { label: "요금안내", href: "/pricing", icon: CreditCard },
