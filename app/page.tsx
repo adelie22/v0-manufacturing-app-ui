@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import AiPostingChat from "@/components/AiPostingChat"
+import AdSlider from "@/components/AdSlider"
 import {
   Building2,
   Smartphone,
@@ -126,7 +127,7 @@ export default function HomePage() {
               하루만 일손이 필요할 때
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
-              일손매칭의 시작과 끝을
+              일손매칭
               <br />
               <span className="text-blue-600">함께 해보세요</span>
             </h1>
@@ -201,6 +202,9 @@ export default function HomePage() {
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40" />
       </section>
+
+      {/* 공감 슬라이드 섹션 */}
+      <AdSlider />
 
       {/* Feature Section 1 - 당일 지급 */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-background">
