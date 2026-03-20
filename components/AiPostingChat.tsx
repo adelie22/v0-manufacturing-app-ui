@@ -4,9 +4,46 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { X, Send, Sparkles, CheckCircle2 } from "lucide-react"
 
+// ─────────────────────────────────────────────
+// 나중에 AI 연동 시 이 파일 대신 아래 주석 참고:
+// app/api/ai-posting/route.ts 활성화 후
+// sendMessage 함수를 API 호출로 교체하면 됩니다.
+// ─────────────────────────────────────────────
+
 interface Message {
   role: "user" | "assistant"
   content: string
+}
+
+interface PostingData {
+  task: string
+  count: string
+  datetime: string
+  pay: string
+  location: string
+}
+
+type Step = "task" | "count" | "datetime" | "pay" | "location" | "done"
+
+const STEPS: Record<Step, { question: string; next: Step | null; field: keyof PostingData | null }> = {
+  task:     { question: "어떤 작업이 필요하신가요?\n(예: 단순 조립, 포장, 물류 이동 등)", next: "count",    field: "task" },
+  count:    { question: "몇 명이 필요하신가요?",                                               next: "datetime", field: "count" },
+  datetime: { question: "언제 필요하신가요?\n(날짜와 근무 시간을 알려주세요)",                   next: "pay",      field: "datetime" },
+  pay:      { question: "급여는 얼마로 하실 건가요?\n(시급 또는 일당)",                          next: "location", field: "pay" },
+  location: { question: "작업 위치는 어디인가요?",                                              next: "done",     field: "location" },
+  done:     { question: "",                                                                    next: null,       field: null },
+}
+
+function buildSummary(data: PostingData): string {
+  return `📋 **공고 초안**
+
+작업 내용: ${data.task}
+필요 인원: ${data.count}
+날짜 / 시간: ${data.datetime}
+급여: ${data.pay}
+위치: ${data.location}
+
+이 내용으로 공고를 등록할까요? ✅`
 }
 
 interface AiPostingChatProps {
@@ -16,58 +53,60 @@ interface AiPostingChatProps {
 export default function AiPostingChat({ onClose }: AiPostingChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [postingReady, setPostingReady] = useState(false)
+  const [step, setStep] = useState<Step>("task")
+  const [posting, setPosting] = useState<Partial<PostingData>>({})
+  const [done, setDone] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // 첫 메시지 자동 시작
+  // 첫 인사 메시지
   useEffect(() => {
-    sendMessage(null)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setMessages([
+      {
+        role: "assistant",
+        content: `안녕하세요! 어떤 인력이 급하게 필요하신가요? 😊\n\n${STEPS.task.question}`,
+      },
+    ])
   }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, loading])
-
-  const sendMessage = async (userText: string | null) => {
-    const newMessages: Message[] = userText
-      ? [...messages, { role: "user", content: userText }]
-      : []
-
-    if (userText) setMessages(newMessages)
-    setInput("")
-    setLoading(true)
-
-    try {
-      const res = await fetch("/api/ai-posting", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
-      })
-      const data = await res.json()
-      const aiText: string = data.message ?? "오류가 발생했습니다"
-
-      const isReady = aiText.includes("[POSTING_READY]")
-      const cleanText = aiText.replace("[POSTING_READY]", "").trim()
-
-      setMessages((prev) => [...prev, { role: "assistant", content: cleanText }])
-      if (isReady) setPostingReady(true)
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "연결 오류가 발생했습니다. 다시 시도해주세요." }])
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [messages])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || loading) return
-    sendMessage(input.trim())
+    if (!input.trim() || done) return
+
+    const userText = input.trim()
+    setInput("")
+
+    const currentStep = STEPS[step]
+    const updatedPosting = { ...posting, [currentStep.field!]: userText }
+    setPosting(updatedPosting)
+
+    const userMsg: Message = { role: "user", content: userText }
+
+    if (currentStep.next === "done") {
+      const summary = buildSummary(updatedPosting as PostingData)
+      setMessages((prev) => [
+        ...prev,
+        userMsg,
+        { role: "assistant", content: summary },
+      ])
+      setStep("done")
+      setDone(true)
+    } else {
+      const nextStep = currentStep.next!
+      setMessages((prev) => [
+        ...prev,
+        userMsg,
+        { role: "assistant", content: STEPS[nextStep].question },
+      ])
+      setStep(nextStep)
+    }
   }
 
   const handleRegister = () => {
-    // TODO: 실제 공고 등록 API 연결
+    // TODO: 실제 공고 등록 API 연결 (/api/jobs POST)
     alert("공고가 등록되었습니다! (개발 중)")
     onClose()
   }
@@ -90,9 +129,28 @@ export default function AiPostingChat({ onClose }: AiPostingChatProps) {
               <p className="text-xs text-gray-400">대화로 간편하게</p>
             </div>
           </div>
-          <button onClick={onClose} className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+          <button
+            onClick={onClose}
+            className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+          >
             <X className="h-4 w-4 text-gray-500" />
           </button>
+        </div>
+
+        {/* 진행 단계 표시 */}
+        <div className="px-5 pt-3 flex gap-1.5">
+          {(["task", "count", "datetime", "pay", "location"] as Step[]).map((s, i) => (
+            <div
+              key={s}
+              className={`h-1 flex-1 rounded-full transition-colors ${
+                i < (["task","count","datetime","pay","location"] as Step[]).indexOf(step) || done
+                  ? "bg-blue-600"
+                  : s === step
+                  ? "bg-blue-300"
+                  : "bg-gray-200"
+              }`}
+            />
+          ))}
         </div>
 
         {/* 메시지 목록 */}
@@ -115,26 +173,11 @@ export default function AiPostingChat({ onClose }: AiPostingChatProps) {
               </div>
             </div>
           ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="h-7 w-7 rounded-full bg-blue-600 flex items-center justify-center mr-2 flex-shrink-0">
-                <Sparkles className="h-3.5 w-3.5 text-white" />
-              </div>
-              <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm">
-                <div className="flex gap-1">
-                  <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                  <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                  <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
-                </div>
-              </div>
-            </div>
-          )}
           <div ref={bottomRef} />
         </div>
 
-        {/* 공고 등록 버튼 (초안 완성 시) */}
-        {postingReady && (
+        {/* 공고 등록 버튼 */}
+        {done && (
           <div className="px-4 pb-2">
             <Button
               onClick={handleRegister}
@@ -152,13 +195,13 @@ export default function AiPostingChat({ onClose }: AiPostingChatProps) {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="메시지를 입력하세요..."
-              disabled={loading}
-              className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              placeholder={done ? "등록이 완료되었습니다" : "답변을 입력하세요..."}
+              disabled={done}
+              className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:opacity-50"
             />
             <Button
               type="submit"
-              disabled={!input.trim() || loading}
+              disabled={!input.trim() || done}
               size="icon"
               className="h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-500 flex-shrink-0"
             >

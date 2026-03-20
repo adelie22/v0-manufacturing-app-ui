@@ -1,3 +1,7 @@
+// ── AI 연동 준비 완료 (현재 미사용) ──────────────────────────
+// 사용 시: ANTHROPIC_API_KEY 환경변수 설정 후
+// AiPostingChat.tsx의 handleSubmit을 API 호출로 교체
+// ─────────────────────────────────────────────────────────────
 import Anthropic from "@anthropic-ai/sdk"
 import { NextRequest, NextResponse } from "next/server"
 
