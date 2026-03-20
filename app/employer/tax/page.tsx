@@ -2,8 +2,39 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, FileText, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Eye, ExternalLink, Archive } from "lucide-react"
+import { ArrowLeft, Download, FileText, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Eye, ExternalLink, Archive, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
+// D-day 계산
+function calcDeadlines(year: number, month: number) {
+  // 원천징수: 다음달 10일
+  const withholding = new Date(year, month, 10) // JS Date month은 0-indexed → month(1-based)이 그대로 다음달
+  // 근로내용확인: 다음달 15일
+  const work = new Date(year, month, 15)
+  // 지급명세서: 분기 다음달 말일 (Q1→4/30, Q2→7/31, Q3→10/31, Q4→다음해 1/31)
+  const quarter = Math.ceil(month / 3)
+  const stmtMonth = quarter * 3 + 1 // 4, 7, 10, 13
+  const stmtYear = year + (stmtMonth > 12 ? 1 : 0)
+  const statement = new Date(stmtYear, stmtMonth > 12 ? 1 : stmtMonth, 0) // day=0 → 전달 말일
+  return { withholding, work, statement }
+}
+
+function getDday(deadline: Date): { label: string; color: string; bgColor: string } {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const d = new Date(deadline)
+  d.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((d.getTime() - today.getTime()) / 86400000)
+  if (diff < 0)  return { label: `D+${Math.abs(diff)}`, color: "text-gray-400", bgColor: "bg-gray-100" }
+  if (diff === 0) return { label: "D-DAY",  color: "text-red-600",    bgColor: "bg-red-100" }
+  if (diff <= 3)  return { label: `D-${diff}`, color: "text-red-600",    bgColor: "bg-red-100" }
+  if (diff <= 7)  return { label: `D-${diff}`, color: "text-orange-600", bgColor: "bg-orange-100" }
+  return              { label: `D-${diff}`, color: "text-emerald-600", bgColor: "bg-emerald-100" }
+}
+
+function fmtDate(d: Date) {
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`
+}
 
 interface Worker {
   id: string
@@ -234,7 +265,7 @@ const DOCS = [
     fileLabel: "XML 다운로드",
     submitRequired: true,
     siteLabel: "토탈서비스",
-    siteUrl: "https://total.kcomwel.or.kr",
+    siteUrl: "https://total.comwel.or.kr",
     siteNote: "토탈서비스 → 근로내용확인신고",
     apiKey: "work_xml",
     fileExt: "xml",
@@ -326,6 +357,14 @@ export default function TaxPage() {
   const togglePreview = (key: DocKey) =>
     setOpenPreview(prev => prev === key ? null : key)
 
+  // D-day 계산 (선택된 year/month 기준)
+  const deadlineDates = calcDeadlines(year, month)
+  const ddayMap: Record<string, { date: Date; dday: ReturnType<typeof getDday> }> = {
+    withholding: { date: deadlineDates.withholding, dday: getDday(deadlineDates.withholding) },
+    work:        { date: deadlineDates.work,         dday: getDday(deadlineDates.work) },
+    statement:   { date: deadlineDates.statement,    dday: getDday(deadlineDates.statement) },
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -406,14 +445,32 @@ export default function TaxPage() {
               </div>
             </div>
 
-            {/* 마감일 */}
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 space-y-1.5">
-              <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" /> 신고 마감일
+            {/* 마감일 D-day */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <p className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                <Clock className="h-4 w-4 text-amber-500" /> 신고 마감일
               </p>
-              {Object.values(data.deadlines).map(d => (
-                <p key={d} className="text-xs text-amber-700">⏰ {d}</p>
-              ))}
+              <div className="space-y-2">
+                {[
+                  { label: "원천징수이행상황신고서", key: "withholding", color: "orange" },
+                  { label: "근로내용확인신고서",     key: "work",        color: "emerald" },
+                  { label: "일용근로소득 지급명세서", key: "statement",   color: "purple" },
+                ].map(item => {
+                  const info = ddayMap[item.key]
+                  const { label: ddayLabel, color: ddayColor, bgColor } = info.dday
+                  return (
+                    <div key={item.key} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                      <div>
+                        <p className="text-xs font-medium text-gray-700">{item.label}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(info.date)}</p>
+                      </div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${bgColor} ${ddayColor}`}>
+                        {ddayLabel}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {/* 서류별 카드 */}
@@ -423,6 +480,7 @@ export default function TaxPage() {
                 const Preview = PREVIEW_MAP[doc.key]
                 const isOpen = openPreview === doc.key
                 const isDownloading = downloading === doc.apiKey
+                const ddayInfo = ddayMap[doc.key]
 
                 return (
                   <div key={doc.key} className={`bg-white rounded-2xl border ${c.border} overflow-hidden`}>
@@ -439,7 +497,10 @@ export default function TaxPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900">{doc.label}</p>
                           <p className={`text-xs font-medium mt-0.5 ${doc.submitRequired ? "text-gray-500" : "text-gray-400"}`}>
-                            {doc.deadline}
+                            {doc.submitRequired && ddayInfo
+                              ? fmtDate(ddayInfo.date)
+                              : doc.deadline
+                            }
                             {!doc.submitRequired && (
                               <span className="ml-2 inline-flex items-center gap-0.5 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs">
                                 내부 보관용
@@ -447,6 +508,12 @@ export default function TaxPage() {
                             )}
                           </p>
                         </div>
+                        {/* D-day 배지 */}
+                        {ddayInfo && (
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${ddayInfo.dday.bgColor} ${ddayInfo.dday.color}`}>
+                            {ddayInfo.dday.label}
+                          </span>
+                        )}
                       </div>
 
                       {/* 2단계 제출 가이드 */}
