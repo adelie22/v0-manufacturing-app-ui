@@ -23,7 +23,9 @@ import {
   Quote,
   TrendingUp,
   BadgeCheck,
-  ChevronRight
+  ChevronRight,
+  MessageCircle,
+  Sparkles
 } from "lucide-react"
 import {
   Sheet,
