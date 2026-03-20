@@ -148,7 +148,7 @@ export default function HomePage() {
                 >
                   <div className="relative bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5" />
-                    AI로 간편하게 공고등록
+                    챗봇으로 간편하게 공고등록
                     {/* 말풍선 꼬리 */}
                     <span className="absolute -bottom-1.5 left-4 w-3 h-3 bg-blue-600 rotate-45 rounded-sm" />
                   </div>
@@ -581,7 +581,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/auth/login?callbackUrl=/worker">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-8 rounded-xl h-14 text-base">
+              <Button size="lg" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-8 rounded-xl h-14 text-base">
                 <Smartphone className="h-5 w-5 mr-2" />
                 구직자로 시작
               </Button>
