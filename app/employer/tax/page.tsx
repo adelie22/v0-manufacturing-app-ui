@@ -323,9 +323,9 @@ export default function TaxPage() {
   const load = useCallback(() => {
     setLoading(true)
     fetch(`/api/employer/tax-report?year=${year}&month=${month}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
       .then(d => {
-        if (d.summary?.workerCount === 0) {
+        if (!d.summary || d.summary.workerCount === 0) {
           setData({ ...MOCK, year, month })
           setIsMock(true)
         } else {
