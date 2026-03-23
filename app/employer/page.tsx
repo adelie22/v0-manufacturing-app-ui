@@ -3,49 +3,60 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
-import { 
-  Users, 
-  DollarSign, 
-  Clock, 
-  MapPin, 
-  CheckCircle, 
+import {
+  Users,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Plus,
-  Star,
   Calendar,
-  Truck,
   Building2,
   Shield,
-  ArrowRight
+  FileText,
+  ChevronRight,
+  UserCheck,
+  UserX,
+  Bell,
 } from "lucide-react"
 
 // Mock data
-const summaryData = {
-  todayWorkers: 12,
-  monthlyExpense: 4850000,
-  pendingPickups: 3
-}
+const todayWorkers = [
+  { id: 1, name: "김민수", status: "출근", time: "08:02" },
+  { id: 2, name: "이영희", status: "출근", time: "08:15" },
+  { id: 3, name: "박철수", status: "출근", time: "07:58" },
+  { id: 4, name: "정지은", status: "결근", time: null },
+  { id: 5, name: "최동현", status: "출근", time: "08:30" },
+]
 
 const jobPostings = [
-  { id: 1, title: "단순 조립 작업", applicants: 8, needed: 5, status: "모집중", location: "청주 공장 A동" },
-  { id: 2, title: "포장 및 검수", applicants: 3, needed: 3, status: "매칭완료", location: "청주 공장 B동" },
-  { id: 3, title: "물류 이동 보조", applicants: 2, needed: 4, status: "모집중", location: "청주 물류센터" },
+  { id: 1, title: "단순 조립 작업", applicants: 8, needed: 5, status: "모집중", date: "오늘" },
+  { id: 2, title: "포장 및 검수", applicants: 3, needed: 3, status: "매칭완료", date: "내일" },
+  { id: 3, title: "물류 이동 보조", applicants: 2, needed: 4, status: "모집중", date: "3/25" },
 ]
 
-const trustedWorkers = [
-  { id: 1, name: "김민수", trustScore: 95, noShows: 0, consecutiveDays: 14, tags: ["성실", "경험자"] },
-  { id: 2, name: "이영희", trustScore: 88, noShows: 1, consecutiveDays: 7, tags: ["초보가능", "성실"] },
-  { id: 3, name: "박철수", trustScore: 92, noShows: 0, consecutiveDays: 21, tags: ["경험자", "리더십"] },
-  { id: 4, name: "정지은", trustScore: 85, noShows: 2, consecutiveDays: 5, tags: ["초보가능"] },
+const insuranceWarnings = [
+  { id: 1, name: "박철수", days: 8, status: "위험" },
+  { id: 2, name: "김민수", days: 7, status: "주의" },
 ]
+
+// 세금 마감일 계산 (원천징수: 매월 10일)
+const today = new Date()
+const withholdingDeadline = new Date(today.getFullYear(), today.getMonth(), 10)
+if (today > withholdingDeadline) withholdingDeadline.setMonth(withholdingDeadline.getMonth() + 1)
+const daysUntilTax = Math.ceil((withholdingDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+const weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+const todayStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${weekdays[today.getDay()]})`
+
+const attendedCount = todayWorkers.filter((w) => w.status === "출근").length
+const absentCount = todayWorkers.filter((w) => w.status === "결근").length
 
 export default function EmployerDashboard() {
   const { data: session } = useSession()
@@ -54,249 +65,342 @@ export default function EmployerDashboard() {
     date: "",
     time: "09:00",
     workers: "3",
-    task: "단순 조립"
+    task: "단순 조립",
   })
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount)
-  }
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
+      {/* 헤더 */}
       <header className="bg-slate-800 text-white px-4 py-5 md:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Building2 className="h-9 w-9" />
+            <Building2 className="h-9 w-9 text-slate-300" />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">일손매칭</h1>
-              <p className="text-slate-300 text-base md:text-lg">사장님 관리 대시보드</p>
+              <p className="text-slate-300 text-base">{todayStr}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg md:text-xl font-medium">{session?.user?.name ?? "사장님"}</p>
-            <p className="text-slate-300 text-base">{session?.user?.email ?? ""}</p>
+            <p className="text-xl font-bold">{session?.user?.name ?? "사장님"}</p>
+            <p className="text-slate-400 text-base">사장님</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
-        {/* Summary Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-lg text-slate-600">오늘 출근 인원</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-5xl md:text-6xl font-bold text-slate-800">{summaryData.todayWorkers}</span>
-                <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <Users className="h-9 w-9 text-emerald-600" />
-                </div>
-              </div>
-              <p className="text-lg text-slate-500 mt-2">명</p>
+      <main className="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
+
+        {/* ① 오늘 핵심 현황 */}
+        <section className="grid grid-cols-3 gap-3">
+          {/* 오늘 출근 */}
+          <Card className="border-2 border-emerald-200 bg-emerald-50 shadow-sm">
+            <CardContent className="pt-4 pb-4 text-center">
+              <p className="text-base text-emerald-700 font-medium mb-1">오늘 출근</p>
+              <p className="text-5xl font-bold text-emerald-700">{attendedCount}</p>
+              <p className="text-base text-emerald-600 mt-1">명</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-lg text-slate-600">금월 인건비 지출</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-4xl md:text-5xl font-bold text-slate-800">485</span>
-                <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
-                  <DollarSign className="h-9 w-9 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-lg text-slate-500 mt-2">만원</p>
+          {/* 이번달 인건비 */}
+          <Card className="border-2 border-blue-200 bg-blue-50 shadow-sm">
+            <CardContent className="pt-4 pb-4 text-center">
+              <p className="text-base text-blue-700 font-medium mb-1">이번달 인건비</p>
+              <p className="text-4xl font-bold text-blue-700">485</p>
+              <p className="text-base text-blue-600 mt-1">만원</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-lg text-slate-600">대기 중 픽업 요청</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-5xl md:text-6xl font-bold text-amber-600">{summaryData.pendingPickups}</span>
-                <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center">
-                  <Truck className="h-9 w-9 text-amber-600" />
-                </div>
-              </div>
-              <p className="text-lg text-slate-500 mt-2">건</p>
+          {/* 세금 마감 */}
+          <Card className={`border-2 shadow-sm ${daysUntilTax <= 3 ? "border-red-300 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+            <CardContent className="pt-4 pb-4 text-center">
+              <p className={`text-base font-medium mb-1 ${daysUntilTax <= 3 ? "text-red-700" : "text-amber-700"}`}>세금 마감</p>
+              <p className={`text-4xl font-bold ${daysUntilTax <= 3 ? "text-red-700" : "text-amber-700"}`}>
+                D-{daysUntilTax}
+              </p>
+              <p className={`text-base mt-1 ${daysUntilTax <= 3 ? "text-red-600" : "text-amber-600"}`}>원천징수</p>
             </CardContent>
           </Card>
         </section>
 
-        {/* Safety Zone Card */}
+        {/* ② 빠른 메뉴 */}
         <section>
-          <Link href="/employer/safety-zone">
-            <Card className="border-2 border-emerald-200 shadow-md bg-emerald-50/50 hover:bg-emerald-50 transition-colors cursor-pointer group">
-              <CardContent className="py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                      <Shield className="h-8 w-8 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-semibold text-emerald-800">Safety Zone 모니터</h3>
-                      <p className="text-base text-emerald-600">근무일수 기반 4대 보험 가입 관리</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="h-7 w-7 text-emerald-600 group-hover:translate-x-1 transition-transform" />
+          <p className="text-lg font-semibold text-slate-600 mb-3 px-1">빠른 메뉴</p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* 일손 구하기 */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white shadow-md transition-all">
+                  <Plus className="h-10 w-10" />
+                  <span className="text-xl font-bold">일손 구하기</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">간편 공고 등록</DialogTitle>
+                  <DialogDescription className="text-lg">
+                    필요한 정보만 입력하세요
+                  </DialogDescription>
+                </DialogHeader>
+                <FieldGroup className="gap-5 pt-4">
+                  <Field>
+                    <FieldLabel className="text-lg">날짜</FieldLabel>
+                    <Input
+                      type="date"
+                      className="h-14 text-lg"
+                      value={jobForm.date}
+                      onChange={(e) => setJobForm({ ...jobForm, date: e.target.value })}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-lg">시작 시간</FieldLabel>
+                    <Select value={jobForm.time} onValueChange={(v) => setJobForm({ ...jobForm, time: v })}>
+                      <SelectTrigger className="h-14 text-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="07:00" className="text-lg">오전 7시</SelectItem>
+                        <SelectItem value="08:00" className="text-lg">오전 8시</SelectItem>
+                        <SelectItem value="09:00" className="text-lg">오전 9시</SelectItem>
+                        <SelectItem value="10:00" className="text-lg">오전 10시</SelectItem>
+                        <SelectItem value="13:00" className="text-lg">오후 1시</SelectItem>
+                        <SelectItem value="14:00" className="text-lg">오후 2시</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-lg">필요 인원</FieldLabel>
+                    <Select value={jobForm.workers} onValueChange={(v) => setJobForm({ ...jobForm, workers: v })}>
+                      <SelectTrigger className="h-14 text-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                          <SelectItem key={n} value={String(n)} className="text-lg">{n}명</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-lg">작업 유형</FieldLabel>
+                    <Select value={jobForm.task} onValueChange={(v) => setJobForm({ ...jobForm, task: v })}>
+                      <SelectTrigger className="h-14 text-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="단순 조립" className="text-lg">단순 조립</SelectItem>
+                        <SelectItem value="포장 작업" className="text-lg">포장 작업</SelectItem>
+                        <SelectItem value="검수 작업" className="text-lg">검수 작업</SelectItem>
+                        <SelectItem value="물류 이동" className="text-lg">물류 이동</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Button
+                    className="w-full h-14 text-xl mt-4 bg-slate-700 hover:bg-slate-800 text-white"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    공고 등록하기
+                  </Button>
+                </FieldGroup>
+              </DialogContent>
+            </Dialog>
+
+            {/* 출근 확인 */}
+            <button
+              onClick={() => document.getElementById("attendance-section")?.scrollIntoView({ behavior: "smooth" })}
+              className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-md transition-all"
+            >
+              <Users className="h-10 w-10" />
+              <span className="text-xl font-bold">출근 확인</span>
+            </button>
+
+            {/* 세금 서류 */}
+            <Link href="/employer/tax" className="block">
+              <button className="w-full flex flex-col items-center justify-center gap-3 h-28 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-md transition-all">
+                <FileText className="h-10 w-10" />
+                <span className="text-xl font-bold">세금 서류</span>
+              </button>
+            </Link>
+
+            {/* 보험 관리 */}
+            <Link href="/employer/safety-zone" className="block">
+              <button className="w-full flex flex-col items-center justify-center gap-3 h-28 rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white shadow-md transition-all">
+                <Shield className="h-10 w-10" />
+                <span className="text-xl font-bold">보험 관리</span>
+              </button>
+            </Link>
+          </div>
+        </section>
+
+        {/* ③ 오늘 출근 명단 */}
+        <section id="attendance-section">
+          <Card className="border-2 border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-2xl flex items-center justify-between text-slate-800">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-7 w-7 text-slate-600" />
+                  오늘 출근 명단
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </section>
-
-        {/* 세금 현황 Card */}
-        <section>
-          <Link href="/employer/tax">
-            <Card className="border-2 border-blue-200 shadow-md bg-blue-50/50 hover:bg-blue-50 transition-colors cursor-pointer group">
-              <CardContent className="py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                      <DollarSign className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-semibold text-blue-800">세금 · 신고 현황</h3>
-                      <p className="text-base text-blue-600">지급명세서 · 원천징수 · 근로내용 확인</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="h-7 w-7 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center gap-3 text-base font-normal">
+                  <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                    <UserCheck className="h-5 w-5" />{attendedCount}명
+                  </span>
+                  <span className="flex items-center gap-1 text-red-500 font-semibold">
+                    <UserX className="h-5 w-5" />{absentCount}명
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </section>
-
-        {/* Quick Job Posting Button */}
-        <section>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                size="lg" 
-                className="w-full md:w-auto h-16 text-xl px-8 bg-slate-700 hover:bg-slate-800 text-white"
-              >
-                <Plus className="h-7 w-7 mr-3" />
-                간편 공고 등록
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">간편 공고 등록</DialogTitle>
-                <DialogDescription className="text-lg">
-                  필요한 정보만 입력하세요
-                </DialogDescription>
-              </DialogHeader>
-              <FieldGroup className="gap-5 pt-4">
-                <Field>
-                  <FieldLabel className="text-lg">날짜</FieldLabel>
-                  <Input 
-                    type="date" 
-                    className="h-14 text-lg"
-                    value={jobForm.date}
-                    onChange={(e) => setJobForm({...jobForm, date: e.target.value})}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel className="text-lg">시작 시간</FieldLabel>
-                  <Select value={jobForm.time} onValueChange={(v) => setJobForm({...jobForm, time: v})}>
-                    <SelectTrigger className="h-14 text-lg">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="07:00" className="text-lg">오전 7시</SelectItem>
-                      <SelectItem value="08:00" className="text-lg">오전 8시</SelectItem>
-                      <SelectItem value="09:00" className="text-lg">오전 9시</SelectItem>
-                      <SelectItem value="10:00" className="text-lg">오전 10시</SelectItem>
-                      <SelectItem value="13:00" className="text-lg">오후 1시</SelectItem>
-                      <SelectItem value="14:00" className="text-lg">오후 2시</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field>
-                  <FieldLabel className="text-lg">필요 인원</FieldLabel>
-                  <Select value={jobForm.workers} onValueChange={(v) => setJobForm({...jobForm, workers: v})}>
-                    <SelectTrigger className="h-14 text-lg">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                        <SelectItem key={n} value={String(n)} className="text-lg">{n}명</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field>
-                  <FieldLabel className="text-lg">작업 유형</FieldLabel>
-                  <Select value={jobForm.task} onValueChange={(v) => setJobForm({...jobForm, task: v})}>
-                    <SelectTrigger className="h-14 text-lg">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="단순 조립" className="text-lg">단순 조립</SelectItem>
-                      <SelectItem value="포장 작업" className="text-lg">포장 작업</SelectItem>
-                      <SelectItem value="검수 작업" className="text-lg">검수 작업</SelectItem>
-                      <SelectItem value="물류 이동" className="text-lg">물류 이동</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Button 
-                  className="w-full h-14 text-xl mt-4 bg-slate-700 hover:bg-slate-800 text-white"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  공고 등록하기
-                </Button>
-              </FieldGroup>
-            </DialogContent>
-          </Dialog>
-        </section>
-
-        {/* Real-time Matching Status */}
-        <section>
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl md:text-3xl flex items-center gap-3 text-slate-800">
-                <Clock className="h-8 w-8" />
-                실시간 매칭 현황
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {jobPostings.map((job) => (
-                <div 
-                  key={job.id} 
-                  className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-xl bg-slate-100 border-2 border-slate-200 gap-4"
+            <CardContent className="space-y-2">
+              {todayWorkers.map((worker) => (
+                <div
+                  key={worker.id}
+                  className={`flex items-center justify-between px-4 py-4 rounded-xl border-2 ${
+                    worker.status === "출근"
+                      ? "bg-emerald-50 border-emerald-200"
+                      : "bg-red-50 border-red-200"
+                  }`}
                 >
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-semibold text-slate-800">{job.title}</h3>
-                    <p className="text-lg text-slate-600 flex items-center gap-2 mt-1">
-                      <MapPin className="h-5 w-5" />
-                      {job.location}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4 md:gap-6">
-                    <div className="text-center">
-                      <p className="text-lg text-slate-600">지원자</p>
-                      <p className="text-2xl md:text-3xl font-bold text-slate-800">
-                        {job.applicants}/{job.needed}
-                      </p>
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                      worker.status === "출근" ? "bg-emerald-200" : "bg-red-200"
+                    }`}>
+                      {worker.status === "출근"
+                        ? <UserCheck className="h-6 w-6 text-emerald-700" />
+                        : <UserX className="h-6 w-6 text-red-600" />
+                      }
                     </div>
-                    <Badge 
-                      className={`text-lg px-4 py-2 ${
-                        job.status === "매칭완료" 
-                          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" 
-                          : "bg-amber-100 text-amber-700 hover:bg-amber-100"
-                      }`}
-                    >
-                      {job.status === "매칭완료" ? (
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 mr-2" />
-                      )}
+                    <span className="text-xl font-semibold text-slate-800">{worker.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {worker.time && (
+                      <span className="text-lg text-slate-500">{worker.time}</span>
+                    )}
+                    <Badge className={`text-base px-3 py-1 ${
+                      worker.status === "출근"
+                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                        : "bg-red-100 text-red-600 hover:bg-red-100"
+                    }`}>
+                      {worker.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* ④ 세금 마감일 알림 배너 */}
+        <section>
+          <Link href="/employer/tax">
+            <div className={`rounded-2xl p-5 flex items-center justify-between shadow-sm border-2 cursor-pointer transition-all hover:shadow-md ${
+              daysUntilTax <= 3
+                ? "bg-red-600 border-red-700 text-white"
+                : daysUntilTax <= 7
+                ? "bg-amber-500 border-amber-600 text-white"
+                : "bg-blue-600 border-blue-700 text-white"
+            }`}>
+              <div className="flex items-center gap-4">
+                <Bell className="h-9 w-9 flex-shrink-0" />
+                <div>
+                  <p className="text-xl font-bold">
+                    {daysUntilTax <= 3 ? "⚠️ 세금 마감이 얼마 남지 않았어요!" : "세금 신고 마감일 안내"}
+                  </p>
+                  <p className="text-lg mt-1 opacity-90">
+                    원천징수 신고 마감 · {withholdingDeadline.getMonth() + 1}월 10일 · D-{daysUntilTax}일 남음
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-lg font-bold">바로가기</span>
+                <ChevronRight className="h-7 w-7" />
+              </div>
+            </div>
+          </Link>
+        </section>
+
+        {/* ⑤ 보험 주의 인원 */}
+        {insuranceWarnings.length > 0 && (
+          <section>
+            <Card className="border-2 border-amber-200 bg-amber-50 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-2xl flex items-center justify-between text-amber-800">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-7 w-7" />
+                    4대 보험 주의 인원
+                  </div>
+                  <Link href="/employer/safety-zone">
+                    <span className="text-base text-amber-600 font-normal flex items-center gap-1 hover:text-amber-800">
+                      전체보기 <ChevronRight className="h-5 w-5" />
+                    </span>
+                  </Link>
+                </CardTitle>
+                <p className="text-base text-amber-700">월 8일 이상 근무 시 4대 보험 가입 의무</p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {insuranceWarnings.map((w) => (
+                  <div key={w.id} className={`flex items-center justify-between px-4 py-4 rounded-xl border-2 ${
+                    w.status === "위험" ? "bg-red-50 border-red-200" : "bg-amber-100 border-amber-300"
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className={`h-7 w-7 ${w.status === "위험" ? "text-red-500" : "text-amber-600"}`} />
+                      <span className="text-xl font-semibold text-slate-800">{w.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg text-slate-600">이번달 {w.days}일 근무</span>
+                      <Badge className={`text-base px-3 py-1 ${
+                        w.status === "위험"
+                          ? "bg-red-100 text-red-700 hover:bg-red-100"
+                          : "bg-amber-200 text-amber-800 hover:bg-amber-200"
+                      }`}>
+                        {w.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* ⑥ 진행중인 공고 */}
+        <section>
+          <Card className="border-2 border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-2xl flex items-center justify-between text-slate-800">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-7 w-7 text-slate-600" />
+                  진행중인 공고
+                </div>
+                <Link href="/employer/post">
+                  <span className="text-base text-slate-500 font-normal flex items-center gap-1 hover:text-slate-800">
+                    공고 등록 <ChevronRight className="h-5 w-5" />
+                  </span>
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {jobPostings.map((job) => (
+                <div
+                  key={job.id}
+                  className="flex items-center justify-between px-4 py-4 rounded-xl bg-slate-100 border-2 border-slate-200"
+                >
+                  <div>
+                    <p className="text-xl font-semibold text-slate-800">{job.title}</p>
+                    <p className="text-base text-slate-500 mt-1">{job.date} · 필요 {job.needed}명</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-base text-slate-500">지원자</p>
+                      <p className="text-2xl font-bold text-slate-800">{job.applicants}/{job.needed}</p>
+                    </div>
+                    <Badge className={`text-base px-3 py-1 ${
+                      job.status === "매칭완료"
+                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                        : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                    }`}>
+                      {job.status === "매칭완료"
+                        ? <CheckCircle className="h-4 w-4 mr-1" />
+                        : <AlertCircle className="h-4 w-4 mr-1" />
+                      }
                       {job.status}
                     </Badge>
                   </div>
@@ -306,145 +410,8 @@ export default function EmployerDashboard() {
           </Card>
         </section>
 
-        {/* Trusted Workers List */}
-        <section>
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl md:text-3xl flex items-center gap-3 text-slate-800">
-                <Star className="h-8 w-8" />
-                신뢰 기반 인력 리스트
-              </CardTitle>
-              <CardDescription className="text-lg">과거 근무 이력을 기반으로 한 추천 인력</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trustedWorkers.map((worker) => (
-                  <div 
-                    key={worker.id} 
-                    className="p-5 rounded-xl bg-slate-100 border-2 border-slate-200 space-y-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl md:text-2xl font-semibold text-slate-800">{worker.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {worker.tags.map((tag) => (
-                          <Badge 
-                            key={tag} 
-                            variant="secondary" 
-                            className="text-base bg-slate-200 text-slate-700"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg text-slate-600">신뢰 점수</span>
-                        <span className="text-xl font-bold text-slate-800">{worker.trustScore}점</span>
-                      </div>
-                      <Progress value={worker.trustScore} className="h-3" />
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-base px-3 py-1 ${
-                          worker.noShows === 0 
-                            ? "border-emerald-300 text-emerald-700 bg-emerald-50" 
-                            : "border-amber-300 text-amber-700 bg-amber-50"
-                        }`}
-                      >
-                        노쇼 {worker.noShows}회
-                      </Badge>
-                      <Badge 
-                        variant="outline" 
-                        className="text-base px-3 py-1 border-blue-300 text-blue-700 bg-blue-50"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" />
-                        연속 {worker.consecutiveDays}일
-                      </Badge>
-                    </div>
-
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-12 text-lg border-2 border-slate-300 text-slate-700 hover:bg-slate-200"
-                    >
-                      우선 매칭 요청
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Map Placeholder */}
-        <section>
-          <Card className="border-2 border-slate-200 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl md:text-3xl flex items-center gap-3 text-slate-800">
-                <MapPin className="h-8 w-8" />
-                픽업 위치 및 지원자 현황
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative h-64 md:h-96 rounded-xl bg-slate-200 border-2 border-slate-300 flex items-center justify-center overflow-hidden">
-                {/* Map placeholder with visual elements */}
-                <div className="absolute inset-0 opacity-30">
-                  <svg className="w-full h-full" viewBox="0 0 400 300">
-                    {/* Roads */}
-                    <line x1="0" y1="150" x2="400" y2="150" stroke="#64748b" strokeWidth="8" />
-                    <line x1="200" y1="0" x2="200" y2="300" stroke="#64748b" strokeWidth="8" />
-                    <line x1="50" y1="80" x2="350" y2="220" stroke="#94a3b8" strokeWidth="4" />
-                    {/* Buildings */}
-                    <rect x="60" y="60" width="60" height="50" fill="#475569" rx="4" />
-                    <rect x="280" y="180" width="70" height="60" fill="#475569" rx="4" />
-                    <rect x="140" y="200" width="50" height="45" fill="#475569" rx="4" />
-                  </svg>
-                </div>
-                {/* Factory marker */}
-                <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2">
-                  <div className="flex flex-col items-center">
-                    <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center shadow-lg">
-                      <Building2 className="h-6 w-6 text-white" />
-                    </div>
-                    <span className="mt-2 text-base font-medium text-slate-700 bg-white px-2 py-1 rounded shadow">공장</span>
-                  </div>
-                </div>
-                {/* Worker markers */}
-                <div className="absolute top-1/4 left-1/4">
-                  <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border-2 border-white">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <div className="absolute top-2/3 right-1/3">
-                  <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border-2 border-white">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <div className="absolute bottom-1/4 left-1/3">
-                  <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center shadow-lg border-2 border-white">
-                    <Truck className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                {/* Legend */}
-                <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 shadow">
-                  <div className="flex items-center gap-4 text-base">
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-emerald-500"></div>
-                      <span className="text-slate-700">지원자</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-amber-500"></div>
-                      <span className="text-slate-700">픽업 차량</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        {/* 하단 여백 */}
+        <div className="h-4" />
       </main>
     </div>
   )
