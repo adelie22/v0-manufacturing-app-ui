@@ -180,8 +180,8 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <Link href={workerHref} className="group">
-                <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 transition-all duration-300 rounded-3xl overflow-hidden">
+              <Link href={workerHref} className="group block">
+                <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-blue-500/40 active:scale-[0.98] transition-all duration-200 rounded-3xl overflow-hidden cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
                       <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
@@ -194,7 +194,7 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-center justify-between text-white font-medium">
                       <span>시작하기</span>
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform duration-200" />
                     </div>
                   </CardContent>
                 </Card>
@@ -599,7 +599,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href={workerHref}>
-              <Button size="lg" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-8 rounded-xl h-14 text-base">
+              <Button size="lg" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/20 hover:scale-105 hover:shadow-lg active:scale-95 transition-all duration-200 font-semibold px-8 rounded-xl h-14 text-base">
                 <Smartphone className="h-5 w-5 mr-2" />
                 구직자로 시작
               </Button>
