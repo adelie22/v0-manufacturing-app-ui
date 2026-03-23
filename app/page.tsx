@@ -27,7 +27,8 @@ import {
   Quote,
   TrendingUp,
   BadgeCheck,
-  ChevronRight
+  ChevronRight,
+  Gift
 } from "lucide-react"
 import {
   Sheet,
@@ -607,6 +608,23 @@ export default function HomePage() {
 
       {/* AI 공고 등록 챗봇 */}
       {aiChatOpen && <AiPostingChat onClose={() => setAiChatOpen(false)} />}
+
+      {/* 중소기업 지원혜택 플로팅 버튼 */}
+      <Link
+        href="/benefits"
+        className="fixed right-5 bottom-8 z-50 group flex flex-col items-center gap-1"
+        aria-label="중소기업 각종 지원혜택 모아보기"
+      >
+        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-200">
+          {/* 펄스 링 */}
+          <span className="absolute inset-0 rounded-full animate-ping bg-emerald-400 opacity-25" />
+          <Gift className="h-7 w-7 text-white" />
+        </div>
+        {/* 툴팁 라벨 */}
+        <span className="bg-slate-900/90 text-white text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 shadow-md">
+          지원혜택 모아보기!
+        </span>
+      </Link>
 
       {/* Footer */}
       <footer className="px-4 sm:px-6 py-16 bg-slate-900">

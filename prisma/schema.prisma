@@ -100,3 +100,17 @@ model Application {
 
   @@unique([workerId, jobId])
 }
+
+model BenefitPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  summary   String?
+  source    String?
+  sourceUrl String?
+  imageUrl  String?
+  category  String   @default("지원금") // "지원금" | "교육" | "보험" | "세금" | "기타"
+  authorId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
