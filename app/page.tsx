@@ -612,18 +612,23 @@ export default function HomePage() {
       {/* 중소기업 지원혜택 플로팅 버튼 */}
       <Link
         href="/benefits"
-        className="fixed right-5 bottom-8 z-50 group flex flex-col items-center gap-1"
-        aria-label="중소기업 각종 지원혜택 모아보기"
+        className="fixed right-5 bottom-8 z-50 group"
+        aria-label="중소기업 정부지원혜택 모아보기"
       >
-        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-200">
+        <div className="relative flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 transition-all duration-200 rounded-2xl px-5 py-3.5 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5">
           {/* 펄스 링 */}
-          <span className="absolute inset-0 rounded-full animate-ping bg-emerald-400 opacity-25" />
-          <Gift className="h-7 w-7 text-white" />
+          <span className="absolute -inset-0.5 rounded-2xl animate-pulse bg-emerald-400 opacity-20 pointer-events-none" />
+          {/* 아이콘 */}
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Gift className="h-5 w-5 text-white" />
+          </div>
+          {/* 텍스트 */}
+          <div className="flex flex-col leading-tight">
+            <span className="text-white/70 text-[10px] font-medium tracking-wide uppercase">Government</span>
+            <span className="text-white font-bold text-sm whitespace-nowrap">중소기업 정부지원혜택</span>
+            <span className="text-emerald-100 text-[11px] font-medium">모아보기 →</span>
+          </div>
         </div>
-        {/* 툴팁 라벨 */}
-        <span className="bg-slate-900/90 text-white text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 shadow-md">
-          지원혜택 모아보기!
-        </span>
       </Link>
 
       {/* Footer */}
