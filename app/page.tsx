@@ -180,24 +180,23 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <Link href={workerHref} className="group block">
-                <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-blue-500/40 active:scale-[0.98] transition-all duration-200 rounded-3xl overflow-hidden cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                        <Smartphone className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-lg font-semibold text-white">구직자</h3>
-                        <p className="text-sm text-blue-200">일자리를 찾고 계신가요?</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-white font-medium">
-                      <span>시작하기</span>
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform duration-200" />
-                    </div>
-                  </CardContent>
-                </Card>
+              <Link
+                href={workerHref}
+                className="group block h-full rounded-3xl bg-blue-600 hover:bg-blue-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-blue-500/40 active:scale-[0.98] transition-all duration-200 cursor-pointer p-6"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <Smartphone className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-white">구직자</h3>
+                    <p className="text-sm text-blue-200">일자리를 찾고 계신가요?</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-white font-medium">
+                  <span>시작하기</span>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform duration-200" />
+                </div>
               </Link>
             </div>
 

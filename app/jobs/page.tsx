@@ -79,9 +79,6 @@ export default function JobsPage() {
             <Image src="/logo.png" alt="일손매칭" width={28} height={28} className="rounded-lg object-cover" />
             <span className="font-bold text-gray-900">일손매칭</span>
           </Link>
-          <Link href="/employer/post" className="text-sm text-blue-600 font-medium hover:underline">
-            공고 등록하기
-          </Link>
         </div>
       </header>
 
