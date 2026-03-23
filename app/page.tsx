@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import AiPostingChat from "@/components/AiPostingChat"
@@ -40,6 +41,8 @@ import Image from "next/image"
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [aiChatOpen, setAiChatOpen] = useState(false)
+  const { data: session } = useSession()
+  const workerHref = session ? "/jobs" : "/auth/login?callbackUrl=/jobs"
 
   const navItems = [
     { label: "알바찾기", href: "/jobs", icon: Search },
@@ -177,7 +180,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <Link href="/auth/login?callbackUrl=/worker" className="group">
+              <Link href={workerHref} className="group">
                 <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 transition-all duration-300 rounded-3xl overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
@@ -595,7 +598,7 @@ export default function HomePage() {
                 사장님으로 시작
               </Button>
             </Link>
-            <Link href="/auth/login?callbackUrl=/worker">
+            <Link href={workerHref}>
               <Button size="lg" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-8 rounded-xl h-14 text-base">
                 <Smartphone className="h-5 w-5 mr-2" />
                 구직자로 시작
