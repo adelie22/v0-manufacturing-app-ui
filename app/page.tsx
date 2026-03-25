@@ -181,7 +181,7 @@ export default function HomePage() {
               </div>
 
               <Link href={workerHref} className="group block rounded-3xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg transition-all duration-300">
-                <div className="p-6">
+                <div className="py-12 px-6">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                       <Smartphone className="h-7 w-7 text-white" />
