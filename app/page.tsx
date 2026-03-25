@@ -180,24 +180,22 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <Link href={workerHref} className="group">
-                <Card className="h-full bg-blue-600 border-0 hover:bg-blue-500 hover:shadow-lg transition-all duration-300 rounded-3xl overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                        <Smartphone className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-lg font-semibold text-white">구직자</h3>
-                        <p className="text-sm text-blue-200">일자리를 찾고 계신가요?</p>
-                      </div>
+              <Link href={workerHref} className="group block rounded-3xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg transition-all duration-300">
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <Smartphone className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex items-center justify-between text-white font-medium">
-                      <span>시작하기</span>
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    <div className="text-left">
+                      <h3 className="text-lg font-semibold text-white">구직자</h3>
+                      <p className="text-sm text-blue-200">일자리를 찾고 계신가요?</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="flex items-center justify-between text-white font-medium">
+                    <span>시작하기</span>
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
               </Link>
             </div>
 
@@ -207,8 +205,8 @@ export default function HomePage() {
         </div>
 
         {/* Decorative Background Elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40 pointer-events-none" />
       </section>
 
       {/* Feature Section 1 - 당일 지급 */}
