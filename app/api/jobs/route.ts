@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const { category, companyName, location, dates, startTime, endTime,
-    headcount, payType, payAmount, instantPay, pickup, description, selectedTasks } = body
+    headcount, payType, payAmount, instantPay, pickup, description, selectedTasks, requirements } = body
 
   if (!category || !companyName || !location || !dates || !payAmount) {
     return NextResponse.json({ error: "필수 항목을 입력해주세요" }, { status: 400 })
@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       pickup: Boolean(pickup),
       description: description || null,
       tasks: selectedTasks ?? [],
+      requirements: requirements ?? null,
     },
   })
 

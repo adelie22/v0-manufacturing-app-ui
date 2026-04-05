@@ -35,6 +35,14 @@ interface Job {
   instantPay: boolean
   pickup: boolean
   tasks: string[]
+  requirements?: {
+    skills?: string[]
+    items?: string[]
+    physical?: string[]
+    ageRange?: string
+    customSkills?: string[]
+    customItems?: string[]
+  } | null
   createdAt: string
   _count: { applications: number }
 }
@@ -304,7 +312,7 @@ export default function JobsPage() {
                 </div>
 
                 {/* 태그 */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {job.tasks.map(tag => (
                     <span key={tag} className="text-sm bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">{tag}</span>
                   ))}
@@ -312,6 +320,25 @@ export default function JobsPage() {
                     <span className="text-sm bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">픽업제공</span>
                   )}
                 </div>
+
+                {/* 요구사항 요약 */}
+                {job.requirements && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {job.requirements.skills?.includes("초보 가능") && (
+                      <span className="text-sm font-medium bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg">초보가능</span>
+                    )}
+                    {(job.requirements.items && job.requirements.items.length > 0) && (
+                      <span className="text-sm bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg">
+                        준비: {job.requirements.items.slice(0, 2).join(", ")}{job.requirements.items.length > 2 ? ` 외 ${job.requirements.items.length - 2}` : ""}
+                      </span>
+                    )}
+                    {(job.requirements.skills && job.requirements.skills.filter(s => s !== "초보 가능").length > 0) && (
+                      <span className="text-sm bg-violet-50 text-violet-700 px-2.5 py-1 rounded-lg">
+                        우대: {job.requirements.skills.filter(s => s !== "초보 가능").slice(0, 2).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* 지원 버튼 (구직자만) */}
                 {isWorker && (

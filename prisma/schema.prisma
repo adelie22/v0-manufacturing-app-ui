@@ -79,8 +79,9 @@ model JobPosting {
   payAmount   Int
   instantPay  Boolean  @default(false)
   pickup      Boolean  @default(false)
-  description String?
-  tasks       String[]
+  description  String?
+  tasks        String[]
+  requirements Json?
 
   status    String   @default("active") // "active" | "closed"
   createdAt DateTime @default(now())
