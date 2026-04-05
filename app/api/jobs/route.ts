@@ -1,6 +1,14 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { eachDayOfInterval, format, parseISO } from "date-fns"
+
+function getDatesInRange(startDate: string, endDate: string): string[] {
+  return eachDayOfInterval({
+    start: parseISO(startDate),
+    end: parseISO(endDate),
+  }).map((d) => format(d, "yyyy-MM-dd"))
+}
 
 // GET /api/jobs - 공고 목록 조회 (공개)
 export async function GET(req: NextRequest) {
@@ -14,9 +22,9 @@ export async function GET(req: NextRequest) {
       status: "active",
       ...(region ? { location: { contains: region } } : {}),
       ...(startDate && endDate
-        ? { date: { gte: startDate, lte: endDate } }
+        ? { dates: { hasSome: getDatesInRange(startDate, endDate) } }
         : startDate
-          ? { date: startDate }
+          ? { dates: { has: startDate } }
           : {}),
     },
     include: {
@@ -40,10 +48,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { category, companyName, location, date, startTime, endTime,
+  const { category, companyName, location, dates, startTime, endTime,
     headcount, payType, payAmount, instantPay, pickup, description, selectedTasks } = body
 
-  if (!category || !companyName || !location || !date || !payAmount) {
+  if (!category || !companyName || !location || !dates || !payAmount) {
     return NextResponse.json({ error: "필수 항목을 입력해주세요" }, { status: 400 })
   }
 
@@ -53,7 +61,7 @@ export async function POST(req: NextRequest) {
       category,
       companyName,
       location,
-      date,
+      dates,
       startTime,
       endTime,
       headcount: Number(headcount),

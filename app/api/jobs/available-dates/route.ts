@@ -11,10 +11,10 @@ export async function GET(req: NextRequest) {
       status: "active",
       ...(region ? { location: { contains: region } } : {}),
     },
-    select: { date: true },
+    select: { dates: true },
   })
 
-  const dates = [...new Set(jobs.map((j) => j.date))].sort()
+  const dates = [...new Set(jobs.flatMap((j) => j.dates))].sort()
 
   return NextResponse.json({ dates })
 }

@@ -9,6 +9,9 @@ import {
   ChevronDown, MapPin, Calendar, Clock,
   Users, Wallet, CheckCircle2, ArrowLeft, Plus, X, Loader2
 } from "lucide-react"
+import { parseISO, format, addDays, isSameDay } from "date-fns"
+import { ko } from "date-fns/locale"
+import EmployerMultiDatePicker from "@/components/EmployerMultiDatePicker"
 
 const CATEGORIES = ["제조/생산", "물류/창고", "식품/음료", "건설/현장", "서비스/기타"]
 const TASKS: Record<string, string[]> = {
@@ -26,7 +29,7 @@ export default function PostJobPage() {
     category: "",
     companyName: "",
     location: "",
-    date: "",
+    dates: [] as string[],
     startTime: "09:00",
     endTime: "18:00",
     headcount: "1",
@@ -47,6 +50,28 @@ export default function PostJobPage() {
         ? form.selectedTasks.filter(t => t !== task)
         : [...form.selectedTasks, task]
     )
+  }
+
+  const formatDatesSummary = (dates: string[]): string => {
+    if (dates.length === 0) return ""
+    const sorted = [...dates].sort()
+    const parsed = sorted.map((d) => parseISO(d))
+
+    // Check if all consecutive
+    let allConsecutive = true
+    for (let i = 1; i < parsed.length; i++) {
+      if (!isSameDay(parsed[i], addDays(parsed[i - 1], 1))) {
+        allConsecutive = false
+        break
+      }
+    }
+
+    if (allConsecutive && parsed.length > 1) {
+      return `${format(parsed[0], "M/d")} ~ ${format(parsed[parsed.length - 1], "M/d")}`
+    }
+
+    // Otherwise list individually
+    return sorted.map((d) => format(parseISO(d), "M/d")).join(", ")
   }
 
   const [submitting, setSubmitting] = useState(false)
@@ -87,7 +112,7 @@ export default function PostJobPage() {
               className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-2xl h-14 text-base font-semibold">
               대시보드로 이동
             </Button>
-            <Button onClick={() => { setSubmitted(false); setStep(1); setForm({ category: "", companyName: "", location: "", date: "", startTime: "09:00", endTime: "18:00", headcount: "1", payType: "daily", payAmount: "", instantPay: true, pickup: false, description: "", selectedTasks: [] }) }}
+            <Button onClick={() => { setSubmitted(false); setStep(1); setForm({ category: "", companyName: "", location: "", dates: [], startTime: "09:00", endTime: "18:00", headcount: "1", payType: "daily", payAmount: "", instantPay: true, pickup: false, description: "", selectedTasks: [] }) }}
               variant="ghost" className="w-full text-gray-500 rounded-2xl h-14 text-base">
               추가 공고 등록
             </Button>
@@ -187,8 +212,11 @@ export default function PostJobPage() {
               <label className="text-base font-medium text-gray-700 flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" /> 근무 날짜
               </label>
-              <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 h-14 text-base focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <EmployerMultiDatePicker
+                selectedDates={form.dates}
+                onChange={(dates) => set("dates", dates)}
+                inline
+              />
             </div>
 
             {/* 시간 */}
@@ -314,7 +342,7 @@ export default function PostJobPage() {
               <div className="space-y-1 text-sm text-gray-700">
                 <p>{form.category} · {form.companyName || "사업장명 미입력"}</p>
                 <p>{form.location || "위치 미입력"}</p>
-                <p>{form.date || "날짜 미입력"} · {form.startTime} ~ {form.endTime}</p>
+                <p>{form.dates.length > 0 ? formatDatesSummary(form.dates) : "날짜 미입력"} · {form.startTime} ~ {form.endTime}</p>
                 <p>{form.headcount}명 · {form.payType === "daily" ? "일당" : "시급"} {Number(form.payAmount).toLocaleString() || "0"}원</p>
                 {form.instantPay && <p className="text-emerald-600 font-medium">당일지급 보장</p>}
               </div>

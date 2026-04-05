@@ -26,7 +26,7 @@ interface Job {
   category: string
   companyName: string
   location: string
-  date: string
+  dates: string[]
   startTime: string
   endTime: string
   headcount: number
@@ -37,6 +37,36 @@ interface Job {
   tasks: string[]
   createdAt: string
   _count: { applications: number }
+}
+
+function formatJobDates(dates: string[]): string {
+  if (!dates || dates.length === 0) return ""
+  const sorted = [...dates].sort()
+  const parsed = sorted.map(d => parseISO(d))
+
+  // Check if dates are consecutive
+  const isConsecutive = parsed.every((date, i) => {
+    if (i === 0) return true
+    const prev = parsed[i - 1]
+    const diffMs = date.getTime() - prev.getTime()
+    return Math.round(diffMs / (1000 * 60 * 60 * 24)) === 1
+  })
+
+  const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`
+
+  if (parsed.length === 1) {
+    return fmt(parsed[0])
+  }
+
+  if (isConsecutive) {
+    return `${fmt(parsed[0])} ~ ${fmt(parsed[parsed.length - 1])}`
+  }
+
+  // Non-consecutive: show up to 3, then "외 N일"
+  if (parsed.length <= 3) {
+    return parsed.map(fmt).join(", ")
+  }
+  return `${parsed.slice(0, 2).map(fmt).join(", ")} 외 ${parsed.length - 2}일`
 }
 
 function timeAgo(dateStr: string) {
@@ -254,7 +284,7 @@ export default function JobsPage() {
                 <div className="space-y-1.5 mt-3 mb-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                    <span>{job.date}</span>
+                    <span>{formatJobDates(job.dates)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
@@ -351,43 +381,45 @@ export default function JobsPage() {
             </div>
           </DrawerHeader>
 
-          <div className="px-4 flex justify-center">
-            <CalendarUI
-              mode="range"
-              selected={tempDateRange}
-              onSelect={(range) => {
-                // 최대 5일 제한
-                if (range?.from && range?.to) {
-                  const days = eachDayOfInterval({ start: range.from, end: range.to })
-                  if (days.length > 5) return
-                }
-                setTempDateRange(range)
-              }}
-              locale={ko}
-              disabled={{ before: new Date() }}
-              modifiers={{
-                hasJob: availableDateObjects,
-              }}
-              modifiersClassNames={{
-                hasJob: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-blue-600",
-              }}
-              className="w-full"
-            />
-          </div>
-
-          {/* 선택된 날짜 표시 */}
-          {tempDateRange?.from && (
-            <div className="px-4 mt-2">
-              <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium text-center">
-                선택: {formatDateLabel(tempDateRange.from, tempDateRange.to)}
-                {tempDateRange.to && !isSameDay(tempDateRange.from, tempDateRange.to) && (
-                  <span className="text-blue-500 ml-1">
-                    ({eachDayOfInterval({ start: tempDateRange.from, end: tempDateRange.to }).length}일)
-                  </span>
-                )}
-              </div>
+          <div className="overflow-y-auto flex-1">
+            <div className="px-4 flex justify-center">
+              <CalendarUI
+                mode="range"
+                selected={tempDateRange}
+                onSelect={(range) => {
+                  // 최대 5일 제한
+                  if (range?.from && range?.to) {
+                    const days = eachDayOfInterval({ start: range.from, end: range.to })
+                    if (days.length > 5) return
+                  }
+                  setTempDateRange(range)
+                }}
+                locale={ko}
+                disabled={{ before: new Date() }}
+                modifiers={{
+                  hasJob: availableDateObjects,
+                }}
+                modifiersClassNames={{
+                  hasJob: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-blue-600",
+                }}
+                className="w-full"
+              />
             </div>
-          )}
+
+            {/* 선택된 날짜 표시 */}
+            {tempDateRange?.from && (
+              <div className="px-4 mt-2">
+                <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium text-center">
+                  선택: {formatDateLabel(tempDateRange.from, tempDateRange.to)}
+                  {tempDateRange.to && !isSameDay(tempDateRange.from, tempDateRange.to) && (
+                    <span className="text-blue-500 ml-1">
+                      ({eachDayOfInterval({ start: tempDateRange.from, end: tempDateRange.to }).length}일)
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <DrawerFooter>
             <Button

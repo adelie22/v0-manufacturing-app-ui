@@ -33,5 +33,22 @@ export async function POST(
     data: { workerId: session.user.id, jobId },
   })
 
+  // 사장님에게 알림 생성
+  const worker = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true },
+  })
+  const workerName = worker?.name || "알 수 없는 사용자"
+
+  await prisma.notification.create({
+    data: {
+      userId: job.employerId,
+      type: "new_application",
+      title: "새 지원자가 있어요",
+      body: `${workerName}님이 [${job.companyName}] 공고에 지원했습니다`,
+      metadata: { jobId, applicationId: application.id, workerName },
+    },
+  })
+
   return NextResponse.json(application, { status: 201 })
 }

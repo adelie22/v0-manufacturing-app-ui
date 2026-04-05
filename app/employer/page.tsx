@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -76,6 +76,30 @@ const greeting =
       ? "안녕하세요"
       : "수고 많으셨어요"
 
+// ─── 시간 표시 헬퍼 ──────────────────────────────────────────
+function timeAgo(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diff = Math.max(0, now - then)
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return "방금 전"
+  if (minutes < 60) return `${minutes}분 전`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}시간 전`
+  const days = Math.floor(hours / 24)
+  return `${days}일 전`
+}
+
+type Notification = {
+  id: string
+  type: string
+  title: string
+  body: string
+  isRead: boolean
+  createdAt: string
+  metadata?: any
+}
+
 export default function EmployerDashboard() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<"home" | "posts" | "tax">("home")
@@ -87,20 +111,165 @@ export default function EmployerDashboard() {
     task: "단순 조립",
   })
 
+  // ── 알림 상태 ──────────────────────────────────────────────
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const bellRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications")
+      if (!res.ok) return
+      const data = await res.json()
+      const items: Notification[] = data.notifications ?? data ?? []
+      setNotifications(items)
+      setUnreadCount(items.filter((n) => !n.isRead).length)
+    } catch {
+      // 네트워크 오류 무시
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
+
+  // 드롭다운 바깥 클릭 닫기
+  useEffect(() => {
+    if (!showNotifications) return
+    function handleClick(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        bellRef.current &&
+        !bellRef.current.contains(e.target as Node)
+      ) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [showNotifications])
+
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    setUnreadCount(0)
+    try {
+      await fetch("/api/notifications/read-all", { method: "PATCH" })
+    } catch {
+      // 실패 시 다음 폴링에서 복구
+    }
+  }
+
+  const handleMarkOneRead = async (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    )
+    setUnreadCount((c) => Math.max(0, c - 1))
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: "PATCH" })
+    } catch {
+      // 실패 시 다음 폴링에서 복구
+    }
+  }
+
   // 퇴근 여부 (mock: 현재 시각이 18시 이후면 정산 가능)
   const canSettle = greetingHour >= 18
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
-      {/* ── 헤더: 인사 + 날짜 ──────────────────────────────────── */}
+      {/* ── 헤더: 인사 + 날짜 + 알림 벨 ─────────────────────────── */}
       <header className="px-5 pt-8 pb-2 max-w-3xl mx-auto">
-        <p className="text-sm font-medium text-gray-500">{todayStr}</p>
-        <h1 className="text-2xl font-bold mt-1 text-gray-900">
-          {greeting},{" "}
-          <span className="text-blue-600">
-            {session?.user?.name ?? "사장님"}
-          </span>
-        </h1>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-500">{todayStr}</p>
+            <h1 className="text-2xl font-bold mt-1 text-gray-900">
+              {greeting},{" "}
+              <span className="text-blue-600">
+                {session?.user?.name ?? "사장님"}
+              </span>
+            </h1>
+          </div>
+
+          {/* 알림 벨 아이콘 */}
+          <div className="relative">
+            <button
+              ref={bellRef}
+              onClick={() => setShowNotifications((v) => !v)}
+              className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="알림"
+            >
+              <Bell className="h-6 w-6 text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-sm font-bold leading-none">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* 알림 드롭다운 */}
+            {showNotifications && (
+              <div
+                ref={dropdownRef}
+                className="absolute right-0 top-14 w-80 bg-white rounded-2xl border border-gray-100 shadow-lg z-50 overflow-hidden"
+              >
+                {/* 드롭다운 헤더 */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                  <h3 className="text-base font-bold text-gray-900">알림</h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 active:text-blue-800 min-h-[44px] flex items-center"
+                    >
+                      모두 읽음
+                    </button>
+                  )}
+                </div>
+
+                {/* 알림 목록 */}
+                <div className="max-h-[360px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="flex items-center justify-center py-10 px-5">
+                      <p className="text-sm text-gray-400">
+                        새로운 알림이 없습니다
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.slice(0, 5).map((noti) => (
+                      <button
+                        key={noti.id}
+                        onClick={() => {
+                          if (!noti.isRead) handleMarkOneRead(noti.id)
+                        }}
+                        className="w-full text-left px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-0 min-h-[44px]"
+                      >
+                        <div className="flex items-start gap-3">
+                          {!noti.isRead && (
+                            <span className="mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full bg-blue-600" />
+                          )}
+                          <div className={noti.isRead ? "pl-[22px]" : ""}>
+                            <p className="text-base font-semibold text-gray-900 leading-snug">
+                              {noti.title}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-0.5 leading-snug">
+                              {noti.body}
+                            </p>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {timeAgo(noti.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 pb-8 space-y-4">

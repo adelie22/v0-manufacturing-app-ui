@@ -20,10 +20,11 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  jobPostings  JobPosting[]  @relation("EmployerPostings")
-  applications Application[] @relation("WorkerApplications")
+  accounts      Account[]
+  sessions      Session[]
+  jobPostings   JobPosting[]   @relation("EmployerPostings")
+  applications  Application[]  @relation("WorkerApplications")
+  notifications Notification[] @relation("UserNotifications")
 }
 
 model Account {
@@ -70,7 +71,7 @@ model JobPosting {
   category    String
   companyName String
   location    String
-  date        String
+  dates       String[]
   startTime   String
   endTime     String
   headcount   Int
@@ -95,10 +96,23 @@ model Application {
   jobId    String
   job      JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  status    String   @default("pending") // "pending" | "accepted" | "rejected"
+  status        String   @default("pending") // "pending" | "accepted" | "rejected"
+  selectedDates String[]
   createdAt DateTime @default(now())
 
   @@unique([workerId, jobId])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  type       String   // "new_application"
+  title      String
+  body       String
+  isRead     Boolean  @default(false)
+  metadata   Json?
+  createdAt  DateTime @default(now())
 }
 
 model BenefitPost {
