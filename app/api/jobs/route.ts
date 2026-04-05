@@ -6,11 +6,18 @@ import { NextRequest, NextResponse } from "next/server"
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const region = searchParams.get("region")
+  const startDate = searchParams.get("startDate")
+  const endDate = searchParams.get("endDate")
 
   const jobs = await prisma.jobPosting.findMany({
     where: {
       status: "active",
       ...(region ? { location: { contains: region } } : {}),
+      ...(startDate && endDate
+        ? { date: { gte: startDate, lte: endDate } }
+        : startDate
+          ? { date: startDate }
+          : {}),
     },
     include: {
       employer: { select: { name: true } },
