@@ -34,8 +34,8 @@ export default function BenefitWritePage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     )
   }
@@ -77,17 +77,18 @@ export default function BenefitWritePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-background">
+    <div className="min-h-screen bg-[#F9FAFB]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
+            <span className="text-sm">뒤로</span>
           </button>
-          <span className="text-lg font-bold text-foreground">혜택 정보 등록</span>
+          <span className="text-lg font-bold text-gray-900">혜택 정보 등록</span>
         </div>
       </header>
 
@@ -95,12 +96,12 @@ export default function BenefitWritePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category">카테고리</Label>
+            <Label htmlFor="category" className="text-base">카테고리</Label>
             <Select
               value={form.category}
               onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
             >
-              <SelectTrigger id="category" className="w-full sm:w-48">
+              <SelectTrigger id="category" className="w-full sm:w-48 h-14">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -115,8 +116,8 @@ export default function BenefitWritePage() {
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">
-              제목 <span className="text-destructive">*</span>
+            <Label htmlFor="title" className="text-base">
+              제목 <span className="text-red-600">*</span>
             </Label>
             <Input
               id="title"
@@ -124,13 +125,14 @@ export default function BenefitWritePage() {
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="예: 2024년 중소기업 고용지원금 신청 방법"
               maxLength={100}
+              className="h-14"
             />
           </div>
 
           {/* Summary */}
           <div className="space-y-2">
-            <Label htmlFor="summary">
-              한줄 요약 <span className="text-muted-foreground text-xs">(선택)</span>
+            <Label htmlFor="summary" className="text-base">
+              한줄 요약 <span className="text-gray-500 text-sm">(선택)</span>
             </Label>
             <Input
               id="summary"
@@ -138,13 +140,14 @@ export default function BenefitWritePage() {
               onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
               placeholder="카드에 표시될 짧은 설명"
               maxLength={150}
+              className="h-14"
             />
           </div>
 
           {/* Content */}
           <div className="space-y-2">
-            <Label htmlFor="content">
-              내용 <span className="text-destructive">*</span>
+            <Label htmlFor="content" className="text-base">
+              내용 <span className="text-red-600">*</span>
             </Label>
             <Textarea
               id="content"
@@ -158,8 +161,8 @@ export default function BenefitWritePage() {
           {/* Source */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="source">
-                출처 <span className="text-muted-foreground text-xs">(선택)</span>
+              <Label htmlFor="source" className="text-base">
+                출처 <span className="text-gray-500 text-sm">(선택)</span>
               </Label>
               <Input
                 id="source"
@@ -167,11 +170,12 @@ export default function BenefitWritePage() {
                 onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
                 placeholder="예: 고용노동부, 중소벤처기업부"
                 maxLength={50}
+                className="h-14"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sourceUrl">
-                원문 링크 <span className="text-muted-foreground text-xs">(선택)</span>
+              <Label htmlFor="sourceUrl" className="text-base">
+                원문 링크 <span className="text-gray-500 text-sm">(선택)</span>
               </Label>
               <Input
                 id="sourceUrl"
@@ -179,6 +183,7 @@ export default function BenefitWritePage() {
                 value={form.sourceUrl}
                 onChange={(e) => setForm((f) => ({ ...f, sourceUrl: e.target.value }))}
                 placeholder="https://..."
+                className="h-14"
               />
             </div>
           </div>
@@ -189,14 +194,14 @@ export default function BenefitWritePage() {
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              className="flex-1 sm:flex-none sm:w-24"
+              className="flex-1 sm:flex-none sm:w-24 h-14 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-800 border-0 font-semibold"
             >
               취소
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 sm:flex-none sm:w-36 bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
+              className="flex-1 sm:flex-none sm:w-36 h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white gap-2 text-base font-semibold"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

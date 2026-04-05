@@ -94,8 +94,8 @@ function fmt(n: number) { return n.toLocaleString("ko-KR") }
 function PreviewTax({ d }: { d: TaxData }) {
   return (
     <div className="mt-3 overflow-x-auto">
-      <p className="text-xs text-gray-400 mb-2">※ 참고용 미리보기입니다</p>
-      <table className="w-full text-xs border border-gray-200 rounded-xl overflow-hidden">
+      <p className="text-sm text-gray-400 mb-2">※ 참고용 미리보기입니다</p>
+      <table className="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
         <thead className="bg-blue-50">
           <tr>{["성명","근무일수","총지급액","원천징수세액","지방소득세","합계세액","차감지급액"].map(h =>
             <th key={h} className="px-2 py-2 text-gray-600 font-medium text-right first:text-left border-b border-gray-200">{h}</th>
@@ -130,7 +130,7 @@ function PreviewTax({ d }: { d: TaxData }) {
 
 function PreviewWithholding({ d }: { d: TaxData }) {
   return (
-    <div className="mt-3 text-xs space-y-3">
+    <div className="mt-3 text-sm space-y-3">
       <p className="text-gray-400">※ 참고용 미리보기 — 홈택스 원천세 신고 메뉴에 동일하게 입력하세요</p>
       <div className="border border-orange-200 rounded-xl overflow-hidden">
         <div className="bg-orange-50 px-3 py-2 font-semibold text-orange-800">원천징수이행상황신고서</div>
@@ -162,7 +162,7 @@ function PreviewWithholding({ d }: { d: TaxData }) {
 
 function PreviewWork({ d }: { d: TaxData }) {
   return (
-    <div className="mt-3 text-xs space-y-3">
+    <div className="mt-3 text-sm space-y-3">
       <p className="text-gray-400">※ 참고용 미리보기 — XML 파일 다운로드 후 토탈서비스에 업로드하세요</p>
       <div className="border border-emerald-200 rounded-xl overflow-hidden">
         <div className="bg-emerald-50 px-3 py-2 font-semibold text-emerald-800">근로내용확인신고서</div>
@@ -193,7 +193,7 @@ function PreviewWork({ d }: { d: TaxData }) {
 
 function PreviewStatement({ d }: { d: TaxData }) {
   return (
-    <div className="mt-3 text-xs space-y-3">
+    <div className="mt-3 text-sm space-y-3">
       <p className="text-gray-400">※ 참고용 미리보기 — 홈택스 지급명세서 제출 메뉴에서 제출하세요</p>
       <div className="border border-purple-200 rounded-xl overflow-hidden">
         <div className="bg-purple-50 px-3 py-2 font-semibold text-purple-800">일용근로소득 지급명세서</div>
@@ -366,15 +366,17 @@ export default function TaxPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Link href="/employer" className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <Link href="/employer" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-100">
             <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <span className="sr-only">뒤로가기</span>
           </Link>
           <span className="font-semibold text-gray-900">세금 · 신고 현황</span>
-          <button onClick={load} className="ml-auto p-2 rounded-full hover:bg-gray-100">
+          <button onClick={load} className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-100">
             <RefreshCw className={`h-4 w-4 text-gray-500 ${loading ? "animate-spin" : ""}`} />
+            <span className="sr-only">새로고침</span>
           </button>
         </div>
       </header>
@@ -401,7 +403,7 @@ export default function TaxPage() {
         </div>
 
         {loading && (
-          <div className="bg-white rounded-2xl p-8 text-center text-gray-400">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
             <p className="text-sm">계산 중...</p>
           </div>
@@ -424,8 +426,8 @@ export default function TaxPage() {
                 <Button
                   onClick={() => handleDownload("all", "xlsx", "전체세금자료")}
                   disabled={!!downloading}
-                  className="h-8 px-3 text-xs bg-gray-900 hover:bg-gray-700 text-white rounded-lg">
-                  {downloading === "all" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <><Download className="h-3.5 w-3.5 mr-1" />전체 XLSX</>}
+                  className="h-11 px-4 text-sm bg-gray-900 hover:bg-gray-700 text-white rounded-2xl">
+                  {downloading === "all" ? <RefreshCw className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-1.5" />전체 XLSX 다운로드</>}
                 </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -438,7 +440,7 @@ export default function TaxPage() {
                   { label:"실 지급액",    value:`${fmt(data.summary.netPay)}원` },
                 ].map(item => (
                   <div key={item.label} className={`p-3 rounded-xl ${item.highlight ? "bg-blue-50" : "bg-gray-50"}`}>
-                    <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                    <p className="text-sm text-gray-500 mb-1">{item.label}</p>
                     <p className={`text-sm font-bold ${item.highlight ? "text-blue-700" : "text-gray-900"}`}>{item.value}</p>
                   </div>
                 ))}
@@ -446,7 +448,7 @@ export default function TaxPage() {
             </div>
 
             {/* 마감일 D-day */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
                 <Clock className="h-4 w-4 text-amber-500" /> 신고 마감일
               </p>
@@ -461,10 +463,10 @@ export default function TaxPage() {
                   return (
                     <div key={item.key} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                       <div>
-                        <p className="text-xs font-medium text-gray-700">{item.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(info.date)}</p>
+                        <p className="text-sm font-medium text-gray-700">{item.label}</p>
+                        <p className="text-sm text-gray-400 mt-0.5">{fmtDate(info.date)}</p>
                       </div>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${bgColor} ${ddayColor}`}>
+                      <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${bgColor} ${ddayColor}`}>
                         {ddayLabel}
                       </span>
                     </div>
@@ -483,10 +485,10 @@ export default function TaxPage() {
                 const ddayInfo = ddayMap[doc.key]
 
                 return (
-                  <div key={doc.key} className={`bg-white rounded-2xl border ${c.border} overflow-hidden`}>
+                  <div key={doc.key} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
                     {/* 카드 헤더 */}
-                    <div className="p-4">
+                    <div className="p-5">
                       <div className="flex items-start gap-3 mb-3">
                         <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
                           {doc.submitRequired
@@ -496,13 +498,13 @@ export default function TaxPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900">{doc.label}</p>
-                          <p className={`text-xs font-medium mt-0.5 ${doc.submitRequired ? "text-gray-500" : "text-gray-400"}`}>
+                          <p className={`text-sm font-medium mt-0.5 ${doc.submitRequired ? "text-gray-500" : "text-gray-400"}`}>
                             {doc.submitRequired && ddayInfo
                               ? fmtDate(ddayInfo.date)
                               : doc.deadline
                             }
                             {!doc.submitRequired && (
-                              <span className="ml-2 inline-flex items-center gap-0.5 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs">
+                              <span className="ml-2 inline-flex items-center gap-0.5 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-sm">
                                 내부 보관용
                               </span>
                             )}
@@ -510,7 +512,7 @@ export default function TaxPage() {
                         </div>
                         {/* D-day 배지 */}
                         {ddayInfo && (
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${ddayInfo.dday.bgColor} ${ddayInfo.dday.color}`}>
+                          <span className={`text-sm font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${ddayInfo.dday.bgColor} ${ddayInfo.dday.color}`}>
                             {ddayInfo.dday.label}
                           </span>
                         )}
@@ -519,19 +521,19 @@ export default function TaxPage() {
                       {/* 2단계 제출 가이드 */}
                       {doc.submitRequired && doc.siteLabel && (
                         <div className={`rounded-xl px-3 py-2.5 mb-3 ${c.step}`}>
-                          <div className="flex items-center gap-2 text-xs font-medium">
+                          <div className="flex items-center gap-2 text-sm font-medium">
                             <span className="flex items-center gap-1.5">
-                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-xs">①</span>
+                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-sm">①</span>
                               {doc.fileType} 파일 다운로드
                             </span>
                             <span className="text-current opacity-50">→</span>
                             <span className="flex items-center gap-1.5">
-                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-xs">②</span>
+                              <span className="h-5 w-5 rounded-full bg-white/60 flex items-center justify-center font-bold text-sm">②</span>
                               {doc.siteLabel}에 업로드
                             </span>
                           </div>
                           {doc.siteNote && (
-                            <p className="text-xs mt-1 opacity-70">{doc.siteNote}</p>
+                            <p className="text-sm mt-1 opacity-70">{doc.siteNote}</p>
                           )}
                         </div>
                       )}
@@ -542,20 +544,20 @@ export default function TaxPage() {
                         <Button
                           onClick={() => handleDownload(doc.apiKey, doc.fileExt, doc.label)}
                           disabled={!!downloading}
-                          className={`h-8 px-3 text-xs text-white rounded-lg ${c.btn}`}>
+                          className={`h-11 px-4 text-sm text-white rounded-2xl ${c.btn}`}>
                           {isDownloading
-                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                            : <><Download className="h-3 w-3 mr-1" />{doc.fileLabel}</>
+                            ? <RefreshCw className="h-4 w-4 animate-spin" />
+                            : <><Download className="h-4 w-4 mr-1.5" />{doc.fileLabel}</>
                           }
                         </Button>
 
                         {/* 미리보기 */}
                         <button
                           onClick={() => togglePreview(doc.key)}
-                          className={`flex items-center gap-1 text-xs font-medium h-8 px-3 rounded-lg border transition-colors ${isOpen ? `${c.bg} ${c.text} border-current` : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
-                          <Eye className="h-3.5 w-3.5" />
+                          className={`flex items-center gap-1.5 text-sm font-medium h-11 px-4 rounded-2xl border transition-colors ${isOpen ? `${c.bg} ${c.text} border-current` : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+                          <Eye className="h-4 w-4" />
                           {isOpen ? "닫기" : "미리보기"}
-                          {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                         </button>
 
                         {/* 사이트 바로가기 */}
@@ -564,8 +566,8 @@ export default function TaxPage() {
                             href={doc.siteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`flex items-center gap-1 text-xs font-medium h-8 px-3 rounded-lg border transition-colors ${c.sitebtn} ml-auto`}>
-                            <ExternalLink className="h-3.5 w-3.5" />
+                            className={`flex items-center gap-1.5 text-sm font-medium h-11 px-4 rounded-2xl border transition-colors ${c.sitebtn} ml-auto`}>
+                            <ExternalLink className="h-4 w-4" />
                             {doc.siteLabel} 바로가기
                           </a>
                         )}
@@ -574,7 +576,7 @@ export default function TaxPage() {
 
                     {/* 인라인 미리보기 */}
                     {isOpen && (
-                      <div className={`border-t ${c.border} px-4 pb-4`}>
+                      <div className="border-t border-gray-100 px-5 pb-5">
                         <Preview d={data} />
                       </div>
                     )}

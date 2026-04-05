@@ -55,17 +55,17 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <CheckCircle2 className="h-14 w-14 text-indigo-500" />
+            <CheckCircle2 className="h-14 w-14 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">프로필 완성하기</h1>
           <p className="text-gray-500">서비스 이용을 위해 기본 정보를 입력해주세요</p>
         </div>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardHeader>
             <CardTitle className="text-gray-900">기본 정보 입력</CardTitle>
             <CardDescription className="text-gray-500">
@@ -81,31 +81,31 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setRole("employer")}
-                    className={`p-4 rounded-xl border-2 transition-all text-left space-y-2 ${
+                    className={`p-4 rounded-xl border-2 transition-all text-left space-y-2 min-h-[44px] ${
                       role === "employer"
-                        ? "border-indigo-500 bg-indigo-50"
+                        ? "border-blue-600 bg-blue-50"
                         : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
-                    <Building2 className={`h-7 w-7 ${role === "employer" ? "text-indigo-500" : "text-gray-400"}`} />
+                    <Building2 className={`h-7 w-7 ${role === "employer" ? "text-blue-600" : "text-gray-400"}`} />
                     <div>
-                      <p className={`font-semibold ${role === "employer" ? "text-indigo-700" : "text-gray-700"}`}>사장님</p>
-                      <p className="text-xs text-gray-400">인력을 구하는 업체</p>
+                      <p className={`font-semibold ${role === "employer" ? "text-blue-700" : "text-gray-700"}`}>사장님</p>
+                      <p className="text-sm text-gray-400">인력을 구하는 업체</p>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole("worker")}
-                    className={`p-4 rounded-xl border-2 transition-all text-left space-y-2 ${
+                    className={`p-4 rounded-xl border-2 transition-all text-left space-y-2 min-h-[44px] ${
                       role === "worker"
-                        ? "border-violet-500 bg-violet-50"
+                        ? "border-blue-600 bg-blue-50"
                         : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
-                    <Smartphone className={`h-7 w-7 ${role === "worker" ? "text-violet-500" : "text-gray-400"}`} />
+                    <Smartphone className={`h-7 w-7 ${role === "worker" ? "text-blue-600" : "text-gray-400"}`} />
                     <div>
-                      <p className={`font-semibold ${role === "worker" ? "text-violet-700" : "text-gray-700"}`}>구직자</p>
-                      <p className="text-xs text-gray-400">일자리를 찾는 분</p>
+                      <p className={`font-semibold ${role === "worker" ? "text-blue-700" : "text-gray-700"}`}>구직자</p>
+                      <p className="text-sm text-gray-400">일자리를 찾는 분</p>
                     </div>
                   </button>
                 </div>
@@ -113,35 +113,35 @@ export default function SignupPage() {
 
               {/* 이름 */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-700">이름</Label>
+                <Label htmlFor="name" className="text-gray-700 text-base">이름</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="실명을 입력해주세요"
-                  className="border-gray-200 focus:border-indigo-500"
+                  className="border-gray-200 focus:border-blue-600 h-14"
                 />
               </div>
 
               {/* 전화번호 */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-gray-700">전화번호</Label>
+                <Label htmlFor="phone" className="text-gray-700 text-base">전화번호</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="010-0000-0000"
-                  className="border-gray-200 focus:border-indigo-500"
+                  className="border-gray-200 focus:border-blue-600 h-14"
                 />
               </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && <p className="text-red-600 text-sm">{error}</p>}
 
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
+                className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl text-base"
               >
                 {loading ? "저장 중..." : "시작하기"}
               </Button>
@@ -150,7 +150,7 @@ export default function SignupPage() {
                 type="button"
                 variant="ghost"
                 onClick={handleCancel}
-                className="w-full text-gray-400 hover:text-gray-600"
+                className="w-full h-14 text-gray-400 hover:text-gray-600"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 다른 계정으로 로그인

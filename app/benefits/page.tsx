@@ -77,28 +77,28 @@ export default function BenefitsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-background">
+    <div className="min-h-screen bg-[#F9FAFB]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
+            <span className="text-sm">뒤로</span>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center">
               <Gift className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-foreground">중소기업 지원혜택 모아보기</span>
+            <span className="text-lg font-bold text-gray-900">중소기업 지원혜택 모아보기</span>
           </div>
           {session && (
             <div className="ml-auto">
               <Button
-                size="sm"
                 onClick={() => router.push("/benefits/write")}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1.5"
+                className="h-11 bg-blue-600 hover:bg-blue-500 text-white gap-1.5 rounded-2xl text-sm font-semibold"
               >
                 <PlusCircle className="h-4 w-4" />
                 글쓰기
@@ -115,10 +115,10 @@ export default function BenefitsPage() {
             <Gift className="h-4 w-4" />
             중소기업 사장님을 위한 혜택 정보
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             각종 지원혜택 모아보기
           </h1>
-          <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
+          <p className="text-gray-500 text-base md:text-lg max-w-xl mx-auto">
             정부 지원금, 고용보험, 세금 혜택 등 중소기업 사장님께 필요한 정보를 한곳에서 확인하세요.
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function BenefitsPage() {
         {/* Search & Filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -145,10 +145,10 @@ export default function BenefitsPage() {
                 setCategory(cat)
                 setPage(1)
               }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] ${
                 category === cat
-                  ? "bg-emerald-500 text-white shadow-sm"
-                  : "bg-white text-muted-foreground border border-border hover:border-emerald-300 hover:text-emerald-600"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600"
               }`}
             >
               {cat}
@@ -159,21 +159,21 @@ export default function BenefitsPage() {
         {/* Posts */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24">
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
               <Gift className="h-8 w-8 text-emerald-400" />
             </div>
-            <p className="text-lg font-semibold text-foreground mb-1">아직 등록된 혜택 정보가 없어요</p>
-            <p className="text-muted-foreground text-sm mb-6">
+            <p className="text-lg font-semibold text-gray-900 mb-1">아직 등록된 혜택 정보가 없어요</p>
+            <p className="text-gray-500 text-sm mb-6">
               유용한 중소기업 지원혜택 정보를 공유해보세요!
             </p>
             {session && (
               <Button
                 onClick={() => router.push("/benefits/write")}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                className="h-11 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-semibold"
               >
                 첫 번째 정보 올리기
               </Button>
@@ -183,27 +183,27 @@ export default function BenefitsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((post) => (
               <Link key={post.id} href={`/benefits/${post.id}`}>
-                <Card className="h-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer border-border/60 group">
-                  <CardContent className="p-5 flex flex-col h-full">
+                <div className="h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group">
+                  <div className="p-5 flex flex-col h-full">
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <span
-                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                        className={`text-sm font-medium px-2.5 py-1 rounded-full ${
                           categoryColors[post.category] ?? categoryColors["기타"]
                         }`}
                       >
                         {post.category}
                       </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-0.5" />
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0 mt-0.5" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-sm leading-snug mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {post.title}
                     </h3>
                     {post.summary && (
-                      <p className="text-muted-foreground text-xs leading-relaxed line-clamp-3 flex-1">
+                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 flex-1">
                         {post.summary}
                       </p>
                     )}
-                    <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100 text-sm text-gray-500">
                       {post.source && (
                         <span className="flex items-center gap-1">
                           <Tag className="h-3 w-3" />
@@ -215,8 +215,8 @@ export default function BenefitsPage() {
                         {new Date(post.createdAt).toLocaleDateString("ko-KR")}
                       </span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
@@ -227,20 +227,20 @@ export default function BenefitsPage() {
           <div className="flex justify-center gap-2 mt-10">
             <Button
               variant="outline"
-              size="sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
+              className="h-11 rounded-2xl"
             >
               이전
             </Button>
-            <span className="flex items-center text-sm text-muted-foreground px-3">
+            <span className="flex items-center text-sm text-gray-500 px-3">
               {page} / {totalPages}
             </span>
             <Button
               variant="outline"
-              size="sm"
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
+              className="h-11 rounded-2xl"
             >
               다음
             </Button>

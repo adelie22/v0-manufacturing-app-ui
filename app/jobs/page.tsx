@@ -71,7 +71,7 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9FAFB]">
       {/* 헤더 */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -123,16 +123,16 @@ export default function JobsPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs font-bold">일손</span>
+                      <span className="text-white text-sm font-bold">일손</span>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400">{job.category}</p>
+                      <p className="text-sm text-gray-400">{job.category}</p>
                       <p className="font-semibold text-gray-900 text-sm">{job.companyName}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs text-gray-400">{timeAgo(job.createdAt)}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                    <p className="text-sm text-gray-400">{timeAgo(job.createdAt)}</p>
+                    <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
                       <MapPin className="h-3 w-3" />
                       <span>{job.location.split(" ").slice(-1)[0]}</span>
                     </div>
@@ -155,7 +155,7 @@ export default function JobsPage() {
                       {job.payType === "daily" ? "일급" : "시급"} {job.payAmount.toLocaleString()}원
                     </span>
                     {job.instantPay && (
-                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      <span className="text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
                         당일지급보장
                       </span>
                     )}
@@ -165,10 +165,10 @@ export default function JobsPage() {
                 {/* 태그 */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {job.tasks.map(tag => (
-                    <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">{tag}</span>
+                    <span key={tag} className="text-sm bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">{tag}</span>
                   ))}
                   {job.pickup && (
-                    <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">픽업제공</span>
+                    <span className="text-sm bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">픽업제공</span>
                   )}
                 </div>
 
@@ -177,7 +177,7 @@ export default function JobsPage() {
                   <Button
                     onClick={() => handleApply(job.id)}
                     disabled={applied || applying === job.id}
-                    className={`w-full h-9 rounded-xl text-sm font-semibold ${applied ? "bg-gray-100 text-gray-400" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                    className={`w-full h-11 rounded-2xl text-sm font-semibold ${applied ? "bg-gray-100 text-gray-400" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
                   >
                     {applying === job.id ? <Loader2 className="h-4 w-4 animate-spin" /> : applied ? "지원완료" : "지원하기"}
                   </Button>
@@ -192,7 +192,7 @@ export default function JobsPage() {
       {session?.user?.role !== "employer" && (
         <div className="fixed bottom-6 right-4 z-40">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-lg px-4 py-3">
-            <p className="text-xs text-gray-500">사장님이신가요?</p>
+            <p className="text-sm text-gray-500">사장님이신가요?</p>
             <Link href="/employer/post" className="text-sm font-bold text-blue-600 flex items-center gap-1">
               무료로 채용 시작하기 →
             </Link>

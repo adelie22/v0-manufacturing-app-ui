@@ -24,19 +24,19 @@ function ErrorContent() {
   const message = errorMessages[error] ?? errorMessages.Default
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">
+      <Card className="w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <AlertCircle className="h-14 w-14 text-red-400" />
+            <AlertCircle className="h-14 w-14 text-red-600" />
           </div>
-          <CardTitle className="text-white text-xl">로그인 오류</CardTitle>
+          <CardTitle className="text-gray-900 text-xl">로그인 오류</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
-          <p className="text-slate-300">{message}</p>
+          <p className="text-gray-500 text-sm">{message}</p>
           <Button
             onClick={() => router.push("/auth/login")}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+            className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-base font-semibold"
           >
             로그인 페이지로 돌아가기
           </Button>

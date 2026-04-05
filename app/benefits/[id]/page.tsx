@@ -76,8 +76,8 @@ export default function BenefitDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     )
   }
@@ -87,32 +87,33 @@ export default function BenefitDetailPage({
   const isAuthor = session?.user?.id === post.authorId
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-background">
+    <div className="min-h-screen bg-[#F9FAFB]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
+            <span className="text-sm">뒤로</span>
           </button>
-          <span className="text-base font-semibold text-foreground line-clamp-1 flex-1">
+          <span className="text-base font-semibold text-gray-900 line-clamp-1 flex-1">
             {post.title}
           </span>
           {isAuthor && (
             <Button
               variant="ghost"
-              size="icon"
               onClick={handleDelete}
               disabled={deleting}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-gray-500 hover:text-red-600 h-11 gap-1.5"
             >
               {deleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
+              삭제
             </Button>
           )}
         </div>
@@ -120,23 +121,23 @@ export default function BenefitDetailPage({
 
       <main className="max-w-3xl mx-auto px-4 py-10">
         {/* Meta */}
-        <div className="mb-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
           <span
-            className={`inline-block text-xs font-medium px-3 py-1 rounded-full mb-4 ${
+            className={`inline-block text-sm font-medium px-3 py-1 rounded-full mb-4 ${
               categoryColors[post.category] ?? categoryColors["기타"]
             }`}
           >
             {post.category}
           </span>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-3 leading-snug">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 leading-snug">
             {post.title}
           </h1>
           {post.summary && (
-            <p className="text-muted-foreground text-base leading-relaxed mb-4">
+            <p className="text-gray-500 text-base leading-relaxed mb-4">
               {post.summary}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
             {post.source && (
               <span className="flex items-center gap-1.5">
                 <Tag className="h-3.5 w-3.5" />
@@ -154,19 +155,19 @@ export default function BenefitDetailPage({
           </div>
         </div>
 
-        <hr className="border-border/50 mb-8" />
-
         {/* Content */}
-        <div className="prose prose-slate max-w-none text-foreground leading-relaxed whitespace-pre-wrap text-[15px]">
-          {post.content}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="prose prose-slate max-w-none text-gray-900 leading-relaxed whitespace-pre-wrap text-[15px]">
+            {post.content}
+          </div>
         </div>
 
         {/* Source Link */}
         {post.sourceUrl && (
-          <div className="mt-10 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-4 mb-6">
             <div>
-              <p className="text-sm font-semibold text-emerald-700 mb-0.5">원문 보기</p>
-              <p className="text-xs text-emerald-600 truncate">{post.sourceUrl}</p>
+              <p className="text-sm font-semibold text-gray-900 mb-0.5">원문 보기</p>
+              <p className="text-sm text-gray-500 truncate">{post.sourceUrl}</p>
             </div>
             <a
               href={post.sourceUrl}
@@ -174,11 +175,10 @@ export default function BenefitDetailPage({
               rel="noopener noreferrer"
             >
               <Button
-                size="sm"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1.5 flex-shrink-0"
+                className="bg-blue-600 hover:bg-blue-500 text-white gap-1.5 flex-shrink-0 h-11 rounded-2xl font-semibold"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                이동
+                원문 이동
               </Button>
             </a>
           </div>
@@ -189,7 +189,7 @@ export default function BenefitDetailPage({
           <Button
             variant="outline"
             onClick={() => router.push("/benefits")}
-            className="gap-2"
+            className="gap-2 h-11 rounded-2xl"
           >
             <ArrowLeft className="h-4 w-4" />
             목록으로 돌아가기
