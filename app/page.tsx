@@ -151,7 +151,7 @@ export default function HomePage() {
               <span className="text-blue-600">함께해보세요</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
-              제조업 일용직 매칭 플랫폼.
+              중소기업 일용직 매칭 플랫폼.
               <br className="hidden sm:block" />
               사장님과 구직자를 신뢰 기반으로 연결합니다.
             </p>
