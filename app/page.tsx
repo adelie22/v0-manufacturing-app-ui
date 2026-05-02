@@ -146,7 +146,7 @@ export default function HomePage() {
               하루만 일손이 필요할 때
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
-              일손매칭과
+              다-잇다와
               <br />
               <span className="text-blue-600">함께해보세요</span>
             </h1>
