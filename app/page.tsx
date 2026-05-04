@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,29 @@ import Image from "next/image";
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [resRole, setResRole] = useState<"employer" | "worker">("employer");
+  const [resPhone, setResPhone] = useState("");
+  const [resName, setResName] = useState("");
+  const [resStatus, setResStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [resMsg, setResMsg] = useState("");
+  const reservationRef = useRef<HTMLElement>(null);
+
+  const handleReservation = async () => {
+    setResStatus("loading");
+    const res = await fetch("/api/reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: resName, phone: resPhone, role: resRole }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setResStatus("done");
+      setResMsg("사전예약이 완료됐습니다! 오픈되면 연락드릴게요 😊");
+    } else {
+      setResStatus("error");
+      setResMsg(data.error ?? "오류가 발생했습니다. 다시 시도해주세요.");
+    }
+  };
   const { data: session } = useSession();
   const workerHref = session ? "/jobs" : "/auth/login?callbackUrl=/jobs";
 
@@ -224,6 +247,98 @@ export default function HomePage() {
         {/* Decorative Background Elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40 pointer-events-none" />
+      </section>
+
+      {/* 사전예약 섹션 */}
+      <section ref={reservationRef} className="px-4 sm:px-6 py-16 bg-slate-50">
+        <div className="max-w-lg mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full mb-3">
+              사전예약
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              오픈 알림 받기
+            </h2>
+            <p className="text-sm text-gray-500">
+              정식 오픈 시 가장 먼저 연락드립니다
+            </p>
+          </div>
+
+          {resStatus === "done" ? (
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
+              <p className="text-4xl mb-4">🎉</p>
+              <p className="text-base font-semibold text-gray-900">{resMsg}</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-4">
+              {/* 역할 선택 */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-2xl">
+                {(["employer", "worker"] as const).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setResRole(r)}
+                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      resRole === r
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {r === "employer" ? "🏭 사장님" : "👷 구직자"}
+                  </button>
+                ))}
+              </div>
+
+              {/* 이름 (선택) */}
+              <input
+                type="text"
+                placeholder="이름 (선택)"
+                value={resName}
+                onChange={(e) => setResName(e.target.value)}
+                className="w-full h-12 px-4 text-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+
+              {/* 전화번호 */}
+              <input
+                type="tel"
+                placeholder="전화번호 (010-0000-0000)"
+                value={resPhone}
+                onChange={(e) => setResPhone(e.target.value)}
+                className="w-full h-12 px-4 text-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+
+              {resStatus === "error" && (
+                <p className="text-sm text-red-500 text-center">{resMsg}</p>
+              )}
+
+              {/* 신청 버튼 */}
+              <Button
+                onClick={handleReservation}
+                disabled={resStatus === "loading" || !resPhone}
+                className="w-full h-12 rounded-2xl text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white"
+              >
+                {resStatus === "loading" ? "신청 중..." : "오픈 알림 신청"}
+              </Button>
+
+              {/* 카카오톡 버튼 */}
+              <div className="relative flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400">또는</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+              <a
+                href="https://open.kakao.com/o/placeholder"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl text-sm font-semibold bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#191919]">
+                  <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.634 1.628 4.953 4.11 6.318L5 21l4.793-2.634A11.3 11.3 0 0 0 12 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z" />
+                </svg>
+                카카오톡으로 알림 받기
+              </a>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* AI 공고 등록 챗봇 */}

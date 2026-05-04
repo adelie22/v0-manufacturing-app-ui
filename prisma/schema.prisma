@@ -128,6 +128,14 @@ model WorkerProfile {
   updatedAt   DateTime @updatedAt
 }
 
+model Reservation {
+  id        String   @id @default(cuid())
+  name      String?
+  phone     String
+  role      String   // "employer" | "worker"
+  createdAt DateTime @default(now())
+}
+
 model BenefitPost {
   id        String   @id @default(cuid())
   title     String
