@@ -253,7 +253,7 @@ export default function EmployerDashboard() {
               ) : (
                 <div className="space-y-1">
                   {jobs.map((job) => (
-                    <Link key={job.id} href={`/employer/applications?jobId=${job.id}`}>
+                    <Link key={job.id} href={`/employer/jobs/${job.id}`}>
                       <div className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -292,7 +292,10 @@ export default function EmployerDashboard() {
           <>
             {/* 요약 카드 2개 */}
             <section className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <button
+                onClick={() => setActiveTab("posts")}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-left hover:border-blue-200 active:bg-blue-50 transition-colors w-full"
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
                     <ClipboardList className="h-5 w-5 text-blue-600" />
@@ -303,7 +306,8 @@ export default function EmployerDashboard() {
                   <span className="text-3xl font-bold text-blue-600">{activeJobs.length}</span>
                   <span className="text-base text-gray-500">건</span>
                 </div>
-              </div>
+                <p className="text-xs text-blue-500 mt-1">탭해서 보기 →</p>
+              </button>
 
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-3">
