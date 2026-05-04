@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef } from "react";
+import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,21 @@ export default function HomePage() {
                   {item.label}
                 </Link>
               ))}
+              {session ? (
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  로그아웃
+                </button>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="text-base font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  로그인
+                </Link>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -132,14 +148,31 @@ export default function HomePage() {
                             >
                               <div className="flex items-center gap-3">
                                 <item.icon className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">
-                                  {item.label}
-                                </span>
+                                <span className="font-medium">{item.label}</span>
                               </div>
                               <ChevronRight className="h-5 w-5 text-muted-foreground" />
                             </Link>
                           </li>
                         ))}
+                        <li>
+                          {session ? (
+                            <button
+                              onClick={() => signOut({ callbackUrl: "/" })}
+                              className="w-full flex items-center justify-between px-4 py-4 rounded-2xl text-foreground hover:bg-muted transition-colors"
+                            >
+                              <span className="font-medium">로그아웃</span>
+                            </button>
+                          ) : (
+                            <Link
+                              href="/auth/login"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-center justify-between px-4 py-4 rounded-2xl text-blue-600 hover:bg-muted transition-colors"
+                            >
+                              <span className="font-medium">로그인</span>
+                              <ChevronRight className="h-5 w-5" />
+                            </Link>
+                          )}
+                        </li>
                       </ul>
                     </nav>
                   </div>
