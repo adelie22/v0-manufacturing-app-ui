@@ -177,8 +177,8 @@ export default function JobsPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="일손매칭" width={28} height={28} className="rounded-lg object-cover" />
-            <span className="font-bold text-gray-900">일손매칭</span>
+            <Image src="/logo.png" alt="다잇다" width={28} height={28} className="rounded-lg object-cover" />
+            <span className="font-bold text-gray-900">다잇다</span>
           </Link>
         </div>
       </header>

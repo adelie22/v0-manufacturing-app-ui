@@ -37,10 +37,10 @@ function LoginForm() {
         {/* 로고 */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <Image src="/logo.png" alt="일손매칭" width={80} height={80} className="rounded-2xl object-cover shadow-xl" />
+            <Image src="/logo.png" alt="다잇다" width={80} height={80} className="rounded-2xl object-cover shadow-xl" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">일손매칭</h1>
+            <h1 className="text-3xl font-bold text-gray-900">다잇다</h1>
             <p className="text-gray-500 mt-2">제조업 일용직 매칭 플랫폼</p>
           </div>
         </div>

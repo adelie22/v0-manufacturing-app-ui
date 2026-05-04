@@ -73,8 +73,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-5 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="일손매칭" width={30} height={30} className="rounded-lg" />
-            <span className="font-bold text-lg">일손매칭</span>
+            <Image src="/logo.png" alt="다잇다" width={30} height={30} className="rounded-lg" />
+            <span className="font-bold text-lg">다잇다</span>
           </Link>
           <Link
             href="/auth/login?callbackUrl=/jobs"
@@ -153,7 +153,7 @@ export default function LandingPage() {
 
           <div className="text-center mb-8">
             <ChevronDown className="h-6 w-6 text-blue-400 mx-auto animate-bounce" />
-            <p className="text-blue-600 font-bold mt-2">일손매칭이 해결합니다</p>
+            <p className="text-blue-600 font-bold mt-2">다잇다이 해결합니다</p>
           </div>
 
           <div className="space-y-4">
@@ -303,11 +303,11 @@ export default function LandingPage() {
 
       {/* 푸터 */}
       <footer className="border-t border-gray-100 px-5 py-8 text-center text-xs text-gray-400">
-        <p className="mb-2 font-semibold text-gray-600">일손매칭</p>
+        <p className="mb-2 font-semibold text-gray-600">다잇다</p>
         <p className="leading-relaxed">
           중소기업 일용직 매칭 플랫폼 · 사업자등록번호 000-00-00000
           <br />
-          © 2025 일손매칭. All rights reserved.
+          © 2025 다잇다. All rights reserved.
         </p>
       </footer>
 

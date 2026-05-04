@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/ljh/일손매칭/components -type f -name *nav* -o -name *header* -o -name *menu*)",
+      "Bash(xargs ls:*)",
+      "Bash(find /Users/ljh/일손매칭/app -type f -name *.tsx -o -name *.ts)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(npx prisma:*)",
+      "Bash(find /Users/ljh/일손매칭/src -type f -name *employer*)",
+      "Bash(find /Users/ljh/일손매칭/app/auth -type f -name *.tsx -o -name *.ts)",
+      "Bash(find /Users/ljh/일손매칭/app/api -type f -name *.ts -o -name *.tsx)",
+      "Bash(git revert:*)",
+      "Bash(wc:*)",
+      "Bash(cd:*)",
+      "Bash(cat:*)",
+      "Bash(git:*)",
+      "Bash(pnpm dev:*)"
+    ]
+  }
+}

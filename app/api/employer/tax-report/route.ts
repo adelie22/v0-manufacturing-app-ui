@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
     const xmlLines = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
       `<근로내용확인신고서>`,
-      `  <신고기관>일손매칭</신고기관>`,
+      `  <신고기관>다잇다</신고기관>`,
       `  <신고년도>${year}</신고년도>`,
       `  <신고월>${String(month).padStart(2, "0")}</신고월>`,
       `  <신고기한>${year}년 ${month + 1 > 12 ? 1 : month + 1}월 15일</신고기한>`,
@@ -179,7 +179,7 @@ export async function GET(req: NextRequest) {
 
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" })
     const filename = download === "all"
-      ? `일손매칭_세금자료_${year}${String(month).padStart(2, "0")}.xlsx`
+      ? `다잇다_세금자료_${year}${String(month).padStart(2, "0")}.xlsx`
       : `${download}_${year}${String(month).padStart(2, "0")}.xlsx`
 
     return new NextResponse(buf, {

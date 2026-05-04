@@ -58,13 +58,13 @@ export default function HomePage() {
             <Link href="/" className="flex items-center gap-2.5">
               <Image
                 src="/logo.png"
-                alt="일손매칭"
+                alt="다잇다"
                 width={36}
                 height={36}
                 className="rounded-xl object-cover"
               />
               <span className="text-xl font-bold text-foreground">
-                일손매칭
+                다잇다
               </span>
             </Link>
 
@@ -97,13 +97,13 @@ export default function HomePage() {
                       <div className="flex items-center gap-2.5">
                         <Image
                           src="/logo.png"
-                          alt="일손매칭"
+                          alt="다잇다"
                           width={36}
                           height={36}
                           className="rounded-xl object-cover"
                         />
                         <span className="text-xl font-bold text-foreground">
-                          일손매칭
+                          다잇다
                         </span>
                       </div>
                     </div>
@@ -532,7 +532,7 @@ export default function HomePage() {
                 실제 사용자들의 후기
               </h2>
               <p className="text-lg text-muted-foreground">
-                일손매칭을 사용한 사장님과 구직자들의 생생한 이야기
+                다잇다을 사용한 사장님과 구직자들의 생생한 이야기
               </p>
             </div>
 
@@ -611,7 +611,7 @@ export default function HomePage() {
                 </span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-                숫자로 보는 일손매칭
+                숫자로 보는 다잇다
               </h2>
             </div>
 
@@ -649,7 +649,7 @@ export default function HomePage() {
                 더 많은 기능
               </h2>
               <p className="text-lg text-muted-foreground">
-                일손매칭에서 제공하는 다양한 기능을 만나보세요
+                다잇다에서 제공하는 다양한 기능을 만나보세요
               </p>
             </div>
 
@@ -908,15 +908,15 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-2.5 mb-4">
               <Image
                 src="/logo.png"
-                alt="일손매칭"
+                alt="다잇다"
                 width={36}
                 height={36}
                 className="rounded-xl object-cover"
               />
-              <span className="text-xl font-bold text-white">일손매칭</span>
+              <span className="text-xl font-bold text-white">다잇다</span>
             </div>
             <p className="text-slate-500 text-sm">
-              일손매칭 - 중소기업 일용직 매칭 플랫폼
+              다잇다 - 중소기업 일용직 매칭 플랫폼
             </p>
           </div>
         </div>

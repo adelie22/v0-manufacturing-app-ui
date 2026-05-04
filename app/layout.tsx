@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: '일손매칭 - 제조업 일용직 매칭 플랫폼',
+  title: '다잇다 - 제조업 일용직 매칭 플랫폼',
   description: '신뢰 기반 제조업 일용직 매칭 서비스. 사장님과 구직자를 연결합니다.',
   generator: 'v0.app',
   icons: {

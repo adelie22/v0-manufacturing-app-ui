@@ -166,7 +166,7 @@ export default function PostJobPage() {
             <span className="sr-only">뒤로가기</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="일손매칭" width={24} height={24} className="rounded-lg object-cover" />
+            <Image src="/logo.png" alt="다잇다" width={24} height={24} className="rounded-lg object-cover" />
             <span className="font-semibold text-gray-900">공고 등록</span>
           </div>
           {/* 진행 바 */}

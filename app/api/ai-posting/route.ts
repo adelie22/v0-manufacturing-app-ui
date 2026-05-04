@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const client = new Anthropic()
 
-const SYSTEM_PROMPT = `당신은 일손매칭 플랫폼의 AI 공고 등록 도우미입니다. 사장님이 구인 공고를 빠르게 등록할 수 있도록 돕습니다.
+const SYSTEM_PROMPT = `당신은 다잇다 플랫폼의 AI 공고 등록 도우미입니다. 사장님이 구인 공고를 빠르게 등록할 수 있도록 돕습니다.
 
 다음 5가지 정보를 자연스러운 대화로 수집하세요:
 1. 작업 내용 (예: 단순 조립, 포장, 물류 등)
