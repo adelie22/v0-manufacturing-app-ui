@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
@@ -131,6 +132,10 @@ export default function EmployerDashboard() {
       <header className="px-5 pt-8 pb-2 max-w-3xl mx-auto">
         <div className="flex items-start justify-between">
           <div>
+            <Link href="/" className="flex items-center gap-2 mb-3">
+              <Image src="/logo.png" alt="다잇다" width={28} height={28} className="rounded-lg object-cover" />
+              <span className="font-bold text-gray-900">다잇다</span>
+            </Link>
             <p className="text-sm font-medium text-gray-500">{todayStr}</p>
             <h1 className="text-2xl font-bold mt-1 text-gray-900">
               {greeting},{" "}
