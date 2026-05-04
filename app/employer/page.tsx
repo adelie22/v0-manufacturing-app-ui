@@ -5,23 +5,6 @@ import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
-import {
   Users,
   Banknote,
   ChevronRight,
@@ -93,13 +76,6 @@ type Notification = {
 export default function EmployerDashboard() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<"home" | "posts">("home")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [jobForm, setJobForm] = useState({
-    date: "",
-    time: "09:00",
-    workers: "3",
-    task: "단순 조립",
-  })
 
   // ── 알림 상태 ──────────────────────────────────────────────
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -263,6 +239,55 @@ export default function EmployerDashboard() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 pb-8 space-y-4">
+        {/* ── 공고관리 탭 ───────────────────────────────────────── */}
+        {activeTab === "posts" && (
+          <section>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-gray-900">내 공고</h2>
+                <Link href="/employer/post">
+                  <button className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                    <Plus className="h-4 w-4" />
+                    공고등록
+                  </button>
+                </Link>
+              </div>
+              {activePostings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <p className="text-base text-gray-400">등록된 공고가 없습니다</p>
+                  <Link href="/employer/post">
+                    <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white h-12 px-6 rounded-2xl text-base font-semibold">
+                      <Plus className="h-5 w-5" />
+                      공고등록
+                    </button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activePostings.map((job) => (
+                    <Link key={job.id} href={`/employer/jobs/${job.id}`}>
+                      <div className="flex items-center justify-between py-3 px-1 border-b border-gray-50 last:border-0 active:bg-gray-50 rounded-lg transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-semibold text-gray-900 truncate">{job.title}</p>
+                          <p className="text-sm text-gray-500 mt-0.5">{job.date} · 필요 {job.needed}명</p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-3">
+                          <span className={`text-base font-bold ${job.applicants >= job.needed ? "text-emerald-600" : "text-amber-600"}`}>
+                            {job.applicants}/{job.needed}
+                          </span>
+                          <ChevronRight className="h-5 w-5 text-gray-300" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── 홈 탭 ─────────────────────────────────────────────── */}
+        {activeTab === "home" && <>
         {/* ① 오늘 핵심 현황: 2 stat cards ─────────────────────── */}
         <section className="grid grid-cols-2 gap-3">
           {/* 출근 현황 */}
@@ -336,137 +361,12 @@ export default function EmployerDashboard() {
                 <p className="text-sm text-gray-500 mb-4">
                   퇴근 후 급여 정산이 가능해요. 지금은 출근 현황을 확인하세요.
                 </p>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
-                      <Plus className="h-5 w-5 mr-2" />
-                      일손 구하기
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md rounded-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-gray-900">
-                        언제, 몇 명 필요해요?
-                      </DialogTitle>
-                      <DialogDescription className="text-sm text-gray-500">
-                        간단하게 입력하면 바로 올려드릴게요
-                      </DialogDescription>
-                    </DialogHeader>
-                    <FieldGroup className="gap-5 pt-2">
-                      <Field>
-                        <FieldLabel className="text-base font-semibold text-gray-900">
-                          날짜가 언제예요?
-                        </FieldLabel>
-                        <Input
-                          type="date"
-                          className="h-14 text-base rounded-2xl border border-gray-200 bg-white"
-                          value={jobForm.date}
-                          onChange={(e) =>
-                            setJobForm({ ...jobForm, date: e.target.value })
-                          }
-                        />
-                      </Field>
-                      <Field>
-                        <FieldLabel className="text-base font-semibold text-gray-900">
-                          몇 시에 시작할까요?
-                        </FieldLabel>
-                        <Select
-                          value={jobForm.time}
-                          onValueChange={(v) =>
-                            setJobForm({ ...jobForm, time: v })
-                          }
-                        >
-                          <SelectTrigger className="h-14 text-base rounded-2xl border border-gray-200 bg-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              "07:00",
-                              "08:00",
-                              "09:00",
-                              "10:00",
-                              "13:00",
-                              "14:00",
-                            ].map((t) => (
-                              <SelectItem
-                                key={t}
-                                value={t}
-                                className="text-base"
-                              >
-                                {parseInt(t) < 12
-                                  ? `오전 ${parseInt(t)}시`
-                                  : `오후 ${parseInt(t) - 12 || 12}시`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field>
-                        <FieldLabel className="text-base font-semibold text-gray-900">
-                          몇 명 필요해요?
-                        </FieldLabel>
-                        <Select
-                          value={jobForm.workers}
-                          onValueChange={(v) =>
-                            setJobForm({ ...jobForm, workers: v })
-                          }
-                        >
-                          <SelectTrigger className="h-14 text-base rounded-2xl border border-gray-200 bg-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                              <SelectItem
-                                key={n}
-                                value={String(n)}
-                                className="text-base"
-                              >
-                                {n}명
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field>
-                        <FieldLabel className="text-base font-semibold text-gray-900">
-                          어떤 작업이에요?
-                        </FieldLabel>
-                        <Select
-                          value={jobForm.task}
-                          onValueChange={(v) =>
-                            setJobForm({ ...jobForm, task: v })
-                          }
-                        >
-                          <SelectTrigger className="h-14 text-base rounded-2xl border border-gray-200 bg-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              "단순 조립",
-                              "포장 작업",
-                              "검수 작업",
-                              "물류 이동",
-                            ].map((t) => (
-                              <SelectItem
-                                key={t}
-                                value={t}
-                                className="text-base"
-                              >
-                                {t}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Button
-                        onClick={() => setIsDialogOpen(false)}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold"
-                      >
-                        공고 올리기
-                      </Button>
-                    </FieldGroup>
-                  </DialogContent>
-                </Dialog>
+                <Link href="/employer/post" className="block">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
+                    <Plus className="h-5 w-5 mr-2" />
+                    공고등록
+                  </Button>
+                </Link>
               </>
             )}
           </div>
@@ -583,6 +483,7 @@ export default function EmployerDashboard() {
             </div>
           </div>
         </section>
+        </>}
 
       </main>
 
@@ -598,17 +499,15 @@ export default function EmployerDashboard() {
             <Home className="h-5 w-5" />
             <span className="text-sm font-medium">홈</span>
           </button>
-          <Link href="/employer/post" className="block">
-            <button
-              onClick={() => setActiveTab("posts")}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
-                activeTab === "posts" ? "text-blue-600" : "text-gray-400"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="text-sm font-medium">공고관리</span>
-            </button>
-          </Link>
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
+              activeTab === "posts" ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <FileText className="h-5 w-5" />
+            <span className="text-sm font-medium">공고관리</span>
+          </button>
         </div>
       </nav>
     </div>
