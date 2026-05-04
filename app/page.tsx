@@ -146,9 +146,9 @@ export default function HomePage() {
               7일만 먼저 써보세요
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
-              다-잇다와
+              다-잇다
               <br />
-              <span className="text-blue-600">함께해보세요</span>
+              <span className="text-blue-600">중소기업 전문 구인구직</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
               단기 근무로 시작해서 맞으면 오래 함께하세요.
