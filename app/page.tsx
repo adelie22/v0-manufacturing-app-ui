@@ -143,7 +143,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto">
             <p className="text-blue-600 text-base md:text-lg font-medium mb-4 tracking-tight">
-              하루만 일손이 필요할 때
+              7일만 먼저 써보세요
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
               다-잇다와
@@ -151,9 +151,9 @@ export default function HomePage() {
               <span className="text-blue-600">함께해보세요</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
-              중소기업 일용직 매칭 플랫폼.
+              단기 근무로 시작해서 맞으면 오래 함께하세요.
               <br className="hidden sm:block" />
-              사장님과 구직자를 신뢰 기반으로 연결합니다.
+              사장님도, 구직자도 부담 없이.
             </p>
 
             {/* Selection Cards - Toss Style */}
