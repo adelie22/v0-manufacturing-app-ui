@@ -31,7 +31,7 @@ import {
   Plus,
   Home,
   FileText,
-  Calculator,
+
 } from "lucide-react"
 
 // ─── Mock data ────────────────────────────────────────────────
@@ -55,16 +55,6 @@ const attendedWorkers = todayWorkers.filter((w) => w.status === "출근")
 const absentWorkers = todayWorkers.filter((w) => w.status === "결근")
 const todayExpense = attendedWorkers.length * DAILY_WAGE
 
-const withholdingDeadline = new Date(
-  todayDate.getFullYear(),
-  todayDate.getMonth(),
-  10
-)
-if (todayDate > withholdingDeadline)
-  withholdingDeadline.setMonth(withholdingDeadline.getMonth() + 1)
-const daysUntilTax = Math.ceil(
-  (withholdingDeadline.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
-)
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 const todayStr = `${todayDate.getMonth() + 1}월 ${todayDate.getDate()}일 ${WEEKDAYS[todayDate.getDay()]}요일`
@@ -102,7 +92,7 @@ type Notification = {
 
 export default function EmployerDashboard() {
   const { data: session } = useSession()
-  const [activeTab, setActiveTab] = useState<"home" | "posts" | "tax">("home")
+  const [activeTab, setActiveTab] = useState<"home" | "posts">("home")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [jobForm, setJobForm] = useState({
     date: "",
@@ -594,55 +584,6 @@ export default function EmployerDashboard() {
           </div>
         </section>
 
-        {/* ⑤ 세금 마감 알림 (D-7 이하일 때만 표시) ───────────── */}
-        {daysUntilTax <= 7 && (
-          <section>
-            <Link href="/employer/tax">
-              <div
-                className={`rounded-2xl border shadow-sm p-5 flex items-center justify-between active:opacity-90 transition-opacity ${
-                  daysUntilTax <= 3
-                    ? "bg-red-50 border-red-100"
-                    : "bg-amber-50 border-amber-100"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      daysUntilTax <= 3 ? "bg-red-100" : "bg-amber-100"
-                    }`}
-                  >
-                    <Bell
-                      className={`h-5 w-5 ${
-                        daysUntilTax <= 3
-                          ? "text-red-600"
-                          : "text-amber-600"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p
-                      className={`text-base font-semibold ${
-                        daysUntilTax <= 3
-                          ? "text-red-700"
-                          : "text-amber-700"
-                      }`}
-                    >
-                      원천징수 신고 D-{daysUntilTax}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      {withholdingDeadline.getMonth() + 1}월 10일 마감
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight
-                  className={`h-5 w-5 flex-shrink-0 ${
-                    daysUntilTax <= 3 ? "text-red-400" : "text-amber-400"
-                  }`}
-                />
-              </div>
-            </Link>
-          </section>
-        )}
       </main>
 
       {/* ── 하단 탭 바 ─────────────────────────────────────────── */}
@@ -666,17 +607,6 @@ export default function EmployerDashboard() {
             >
               <FileText className="h-5 w-5" />
               <span className="text-sm font-medium">공고관리</span>
-            </button>
-          </Link>
-          <Link href="/employer/tax" className="block">
-            <button
-              onClick={() => setActiveTab("tax")}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
-                activeTab === "tax" ? "text-blue-600" : "text-gray-400"
-              }`}
-            >
-              <Calculator className="h-5 w-5" />
-              <span className="text-sm font-medium">정산·세금</span>
             </button>
           </Link>
         </div>
