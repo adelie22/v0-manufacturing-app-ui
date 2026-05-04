@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "WorkerProfile" (
+CREATE TABLE IF NOT EXISTS "WorkerProfile" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "bio" TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE "WorkerProfile" (
 );
 
 -- CreateTable
-CREATE TABLE "Reservation" (
+CREATE TABLE IF NOT EXISTS "Reservation" (
     "id" TEXT NOT NULL,
     "name" TEXT,
     "phone" TEXT NOT NULL,
@@ -23,7 +23,8 @@ CREATE TABLE "Reservation" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "WorkerProfile_userId_key" ON "WorkerProfile"("userId");
+CREATE UNIQUE INDEX IF NOT EXISTS "WorkerProfile_userId_key" ON "WorkerProfile"("userId");
 
 -- AddForeignKey
+ALTER TABLE "WorkerProfile" DROP CONSTRAINT IF EXISTS "WorkerProfile_userId_fkey";
 ALTER TABLE "WorkerProfile" ADD CONSTRAINT "WorkerProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
