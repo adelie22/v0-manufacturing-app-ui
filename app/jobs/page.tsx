@@ -180,6 +180,9 @@ export default function JobsPage() {
             <Image src="/logo.png" alt="다잇다" width={28} height={28} className="rounded-lg object-cover" />
             <span className="font-bold text-gray-900">다잇다</span>
           </Link>
+          <Link href="/worker/profile" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+            내 이력서
+          </Link>
         </div>
       </header>
 
