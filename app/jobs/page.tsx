@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { MapPin, Clock, Calendar, ChevronDown, Wallet, Loader2, X, CalendarDays } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -177,8 +176,7 @@ export default function JobsPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="다잇다" width={28} height={28} className="rounded-lg object-cover" />
-            <span className="font-bold text-gray-900">다잇다</span>
+            <span className="font-bold text-gray-900 font-[family-name:var(--font-dm-sans)] tracking-tight">Da-Itda</span>
           </Link>
           <Link href="/worker/profile" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
             내 이력서
