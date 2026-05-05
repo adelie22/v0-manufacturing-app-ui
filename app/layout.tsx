@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk } from 'next/font/google'
+import { DM_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import AuthSessionProvider from '@/components/session-provider'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
   title: '다잇다 - 제조업 일용직 매칭 플랫폼',
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={spaceGrotesk.variable}>
+    <html lang="en" className={dmSans.variable}>
       <body className="font-sans antialiased">
         <AuthSessionProvider>
           {children}

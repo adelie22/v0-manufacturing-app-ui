@@ -67,7 +67,7 @@ export default function HomePage() {
           <div className="flex items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="text-xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)] tracking-tight">
+              <span className="text-xl font-bold text-foreground font-[family-name:var(--font-dm-sans)] tracking-tight">
                 Da-Itda
               </span>
             </Link>
@@ -114,7 +114,7 @@ export default function HomePage() {
                     {/* Mobile Menu Header */}
                     <div className="p-5 border-b border-border">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)] tracking-tight">
+                        <span className="text-xl font-bold text-foreground font-[family-name:var(--font-dm-sans)] tracking-tight">
                           Da-Itda
                         </span>
                       </div>
@@ -509,7 +509,7 @@ export default function HomePage() {
           </div>
           <div className="pt-8 border-t border-slate-800 text-center">
             <div className="flex items-center justify-center gap-2.5 mb-4">
-              <span className="text-xl font-bold text-white font-[family-name:var(--font-space-grotesk)] tracking-tight">Da-Itda</span>
+              <span className="text-xl font-bold text-white font-[family-name:var(--font-dm-sans)] tracking-tight">Da-Itda</span>
             </div>
             <p className="text-slate-500 text-sm">
               다잇다 - 중소기업 일용직 매칭 플랫폼
