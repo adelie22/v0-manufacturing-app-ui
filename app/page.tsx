@@ -209,11 +209,17 @@ export default function HomePage() {
                   <p className="text-xs text-blue-500 mt-0.5">쿠팡처럼 몇 일만 간단하게 일하고 싶을 때</p>
                 </div>
               </div>
-              <div className="w-full flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-left">
-                <span className="text-xl">🌱</span>
-                <div>
-                  <p className="text-sm font-bold text-emerald-700">7일 체험 → 정규직</p>
-                  <p className="text-xs text-emerald-600 mt-0.5">7일 일해보고 나한테 맞는 기업을 찾아보고 싶을 때</p>
+              <div className="relative w-full mb-4">
+                <div className="w-full flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-left">
+                  <span className="text-xl">🌱</span>
+                  <div>
+                    <p className="text-sm font-bold text-emerald-700">7일 체험 → 정규직</p>
+                    <p className="text-xs text-emerald-600 mt-0.5">7일 일해보고 나한테 맞는 기업을 찾아보고 싶을 때</p>
+                  </div>
+                </div>
+                <div className="absolute -bottom-3.5 right-3 flex items-center gap-1.5 bg-white border border-emerald-200 shadow-sm rounded-xl px-2.5 py-1">
+                  <span className="text-[10px]">🎁</span>
+                  <p className="text-[10px] font-semibold text-emerald-700 whitespace-nowrap">정규직 채용시 정부지원혜택 알림 서비스</p>
                 </div>
               </div>
             </div>
