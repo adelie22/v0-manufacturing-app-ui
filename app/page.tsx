@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import AiPostingChat from "@/components/AiPostingChat";
-import AdSlider from "@/components/AdSlider";
 import {
   Building2,
   Smartphone,
@@ -295,8 +294,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* 공감 슬라이드 */}
-            <AdSlider />
           </div>
         </div>
 
