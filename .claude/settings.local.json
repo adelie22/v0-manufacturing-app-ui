@@ -19,7 +19,9 @@
       "Bash(cd:*)",
       "Bash(cat:*)",
       "Bash(git:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "Bash(mkdir -p \"/Users/jinju/Library/Mobile Documents/com~apple~CloudDocs/일손매칭/app/api/employer/jobs/[id]\")",
+      "Bash(mkdir -p \"/Users/jinju/Library/Mobile Documents/com~apple~CloudDocs/일손매칭/app/employer/jobs/[id]\")"
     ]
   }
 }
