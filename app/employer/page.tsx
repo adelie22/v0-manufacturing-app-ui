@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +14,9 @@ import {
   FileText,
   Users,
   ClipboardList,
+  X,
+  Briefcase,
+  CalendarClock,
 } from "lucide-react"
 
 type Notification = {
@@ -50,7 +54,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 
 export default function EmployerDashboard() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<"home" | "posts">("home")
+  const [showPostTypeModal, setShowPostTypeModal] = useState(false)
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -128,6 +134,50 @@ export default function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
+
+      {/* 공고 유형 선택 모달 */}
+      {showPostTypeModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowPostTypeModal(false)} />
+          <div className="relative bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 pb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900">어떤 인력이 필요하세요?</h2>
+              <button onClick={() => setShowPostTypeModal(false)} className="p-1.5 rounded-xl hover:bg-gray-100">
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => { setShowPostTypeModal(false); router.push("/employer/post?type=daily") }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-300 hover:bg-blue-50 active:bg-blue-100 transition-all text-left"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-gray-900">일용직 구하기</p>
+                  <p className="text-sm text-gray-500 mt-0.5">하루~며칠 단기로 바로 일할 분</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-300 ml-auto flex-shrink-0" />
+              </button>
+              <button
+                onClick={() => { setShowPostTypeModal(false); router.push("/employer/post?type=trial") }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 active:bg-emerald-100 transition-all text-left"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <CalendarClock className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-gray-900">7일 체험 후 정규직</p>
+                  <p className="text-sm text-gray-500 mt-0.5">7일 일해보고 맞으면 정규직 전환</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-300 ml-auto flex-shrink-0" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <header className="px-5 pt-8 pb-2 max-w-3xl mx-auto">
         <div className="flex items-start justify-between">
@@ -236,24 +286,26 @@ export default function EmployerDashboard() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-gray-900">내 공고</h2>
-                <Link href="/employer/post">
-                  <button className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700">
-                    <Plus className="h-4 w-4" />
-                    공고등록
-                  </button>
-                </Link>
+                <button
+                  onClick={() => setShowPostTypeModal(true)}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  공고등록
+                </button>
               </div>
               {jobsLoading ? (
                 <div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>
               ) : jobs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
                   <p className="text-base text-gray-400">등록된 공고가 없습니다</p>
-                  <Link href="/employer/post">
-                    <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white h-12 px-6 rounded-2xl text-base font-semibold">
-                      <Plus className="h-5 w-5" />
-                      공고등록
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => setShowPostTypeModal(true)}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white h-12 px-6 rounded-2xl text-base font-semibold"
+                  >
+                    <Plus className="h-5 w-5" />
+                    공고등록
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-1">
@@ -330,12 +382,13 @@ export default function EmployerDashboard() {
 
             {/* 공고등록 버튼 */}
             <section>
-              <Link href="/employer/post" className="block">
-                <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
-                  <Plus className="h-5 w-5 mr-2" />
-                  공고등록
-                </Button>
-              </Link>
+              <Button
+                onClick={() => setShowPostTypeModal(true)}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                공고등록
+              </Button>
             </section>
 
             {/* 최근 알림 */}
