@@ -195,11 +195,21 @@ export default function HomePage() {
               <br />
               <span className="text-blue-600">중소기업 전문 구인구직</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground mb-6 leading-relaxed max-w-xl mx-auto">
               단기 근무로 시작해서 맞으면 오래 함께하세요.
               <br className="hidden sm:block" />
               사장님도, 구직자도 부담 없이.
             </p>
+
+            <div className="flex items-center justify-center gap-3 mb-10">
+              <span className="flex items-center gap-1.5 px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 text-sm font-semibold rounded-full">
+                🔧 일용직
+              </span>
+              <span className="text-gray-300 font-light">+</span>
+              <span className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-semibold rounded-full">
+                🌱 7일 체험 → 정규직
+              </span>
+            </div>
 
             {/* Selection Cards - Toss Style */}
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mt-12 pt-10">
