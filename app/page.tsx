@@ -201,14 +201,21 @@ export default function HomePage() {
               사장님도, 구직자도 부담 없이.
             </p>
 
-            <div className="flex items-center justify-center gap-3 mb-10">
-              <span className="flex items-center gap-1.5 px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 text-sm font-semibold rounded-full">
-                🔧 일용직
-              </span>
-              <span className="text-gray-300 font-light">+</span>
-              <span className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-semibold rounded-full">
-                🌱 7일 체험 → 정규직
-              </span>
+            <div className="flex flex-col items-center gap-3 mb-10 max-w-sm mx-auto">
+              <div className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl text-left">
+                <span className="text-xl">🔧</span>
+                <div>
+                  <p className="text-sm font-bold text-blue-700">일용직</p>
+                  <p className="text-xs text-blue-500 mt-0.5">쿠팡처럼 몇 일만 간단하게 일하고 싶을 때</p>
+                </div>
+              </div>
+              <div className="w-full flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-left">
+                <span className="text-xl">🌱</span>
+                <div>
+                  <p className="text-sm font-bold text-emerald-700">7일 체험 → 정규직</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">7일 일해보고 나한테 맞는 기업을 찾아보고 싶을 때</p>
+                </div>
+              </div>
             </div>
 
             {/* Selection Cards - Toss Style */}
