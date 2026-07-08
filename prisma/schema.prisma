@@ -129,6 +129,10 @@ model WorkerProfile {
   bio         String?
   workHistory String[]
   skills      String[]
+  // 희망 근무 조건
+  desiredRegions    String[] @default([])
+  desiredCategories String[] @default([])
+  experienceLevel   String? // "신입" | "1년 미만" | "1~3년" | "3~5년" | "5년 이상"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -23,21 +23,21 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 })
   }
 
-  const { bio, workHistory, skills } = await req.json()
+  const { bio, workHistory, skills, desiredRegions, desiredCategories, experienceLevel } = await req.json()
+
+  const data = {
+    bio: bio ?? "",
+    workHistory: workHistory ?? [],
+    skills: skills ?? [],
+    desiredRegions: desiredRegions ?? [],
+    desiredCategories: desiredCategories ?? [],
+    experienceLevel: experienceLevel ?? null,
+  }
 
   const profile = await prisma.workerProfile.upsert({
     where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      bio: bio ?? "",
-      workHistory: workHistory ?? [],
-      skills: skills ?? [],
-    },
-    update: {
-      bio: bio ?? "",
-      workHistory: workHistory ?? [],
-      skills: skills ?? [],
-    },
+    create: { userId: session.user.id, ...data },
+    update: data,
   })
 
   return NextResponse.json(profile)

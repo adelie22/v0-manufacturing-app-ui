@@ -82,7 +82,7 @@ export default function BenefitWritePage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/benefits")}
             className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -193,7 +193,7 @@ export default function BenefitWritePage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => router.push("/benefits")}
               className="flex-1 sm:flex-none sm:w-24 h-14 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-800 border-0 font-semibold"
             >
               취소

@@ -82,7 +82,7 @@ export default function BenefitsPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push(session?.user?.role === "employer" ? "/employer" : session?.user?.role === "worker" ? "/worker" : "/")}
             className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

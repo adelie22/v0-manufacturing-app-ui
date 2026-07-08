@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   ChevronDown, MapPin, Calendar, Clock,
-  Users, Wallet, CheckCircle2, ArrowLeft, Plus, X, Loader2
+  Users, Wallet, CheckCircle2, ArrowLeft, Plus, X, Loader2, Sparkles
 } from "lucide-react"
 import { parseISO, format, addDays, isSameDay } from "date-fns"
 import { ko } from "date-fns/locale"
@@ -22,9 +22,59 @@ const TASKS: Record<string, string[]> = {
   "서비스/기타": ["행사도우미", "주차관리", "청소", "기타"],
 }
 
+const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "충북", "충남", "경북", "경남", "전북", "전남", "강원", "제주"]
+
+const TIME_PRESETS = [
+  { label: "주간 (09~18시)", start: "09:00", end: "18:00" },
+  { label: "이른 주간 (08~17시)", start: "08:00", end: "17:00" },
+  { label: "오후 (13~22시)", start: "13:00", end: "22:00" },
+  { label: "야간 (21~06시)", start: "21:00", end: "06:00" },
+]
+
+const PAY_PRESETS: Record<string, number[]> = {
+  daily: [100000, 110000, 120000, 130000, 140000, 150000],
+  hourly: [10030, 11000, 12000, 13000, 15000],
+}
+
+// 선택 항목들로 상세 설명 자동 생성
+function composeDescription(form: {
+  category: string
+  selectedTasks: string[]
+  startTime: string
+  endTime: string
+  payType: string
+  payAmount: string
+  instantPay: boolean
+  pickup: boolean
+  requirements: { skills: string[]; items: string[]; physical: string[]; customSkills: string[]; customItems: string[] }
+}): string {
+  const lines: string[] = []
+  if (form.selectedTasks.length > 0) {
+    lines.push(`[업무 내용] ${form.category} 현장에서 ${form.selectedTasks.filter((t) => t !== "기타").join(", ")} 업무를 담당합니다.`)
+  }
+  lines.push(`[근무 시간] ${form.startTime} ~ ${form.endTime}`)
+  if (form.payAmount) {
+    lines.push(`[급여] ${form.payType === "daily" ? "일당" : "시급"} ${Number(form.payAmount).toLocaleString()}원${form.instantPay ? " (당일지급 보장)" : ""}`)
+  }
+  const skills = [...form.requirements.skills, ...form.requirements.customSkills]
+  if (skills.length > 0) {
+    lines.push(skills.includes("초보 가능") ? `[지원 자격] 초보 지원 가능합니다. ${skills.filter((s) => s !== "초보 가능").length > 0 ? `${skills.filter((s) => s !== "초보 가능").join(", ")} 우대.` : ""}`.trim() : `[지원 자격] ${skills.join(", ")}`)
+  } else {
+    lines.push("[지원 자격] 누구나 지원 가능합니다.")
+  }
+  const items = [...form.requirements.items, ...form.requirements.customItems]
+  if (items.length > 0) lines.push(`[준비물] ${items.join(", ")}`)
+  if (form.requirements.physical.length > 0) lines.push(`[참고] ${form.requirements.physical.join(", ")} 조건이 필요한 작업입니다.`)
+  if (form.pickup) lines.push("[교통] 사업장 차량 픽업이 제공됩니다.")
+  return lines.join("\n")
+}
+
 export default function PostJobPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
+  const [region, setRegion] = useState("")
+  const [locationDetail, setLocationDetail] = useState("")
+  const [customPay, setCustomPay] = useState(false)
   const [form, setForm] = useState({
     category: "",
     companyName: "",
@@ -51,6 +101,32 @@ export default function PostJobPage() {
   const [submitted, setSubmitted] = useState(false)
 
   const set = (key: string, val: unknown) => setForm(prev => ({ ...prev, [key]: val }))
+
+  // 가입 시 인증한 상호명 + 최근 공고 위치 프리필
+  useEffect(() => {
+    fetch("/api/employer/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return
+        setForm((prev) => ({
+          ...prev,
+          companyName: prev.companyName || data.businessName || data.lastCompanyName || "",
+        }))
+        if (data.lastLocation) {
+          const [firstWord, ...rest] = String(data.lastLocation).split(" ")
+          if (REGIONS.includes(firstWord)) {
+            setRegion(firstWord)
+            setLocationDetail(rest.join(" "))
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // 지역 + 상세주소 → location 문자열로 합성
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, location: region ? `${region} ${locationDetail}`.trim() : "" }))
+  }, [region, locationDetail])
 
   const toggleTask = (task: string) => {
     set("selectedTasks",
@@ -115,10 +191,15 @@ export default function PostJobPage() {
     setSubmitting(true)
     setSubmitError("")
     try {
+      // 설명 미입력 시 선택 항목으로 자동 생성
+      const payload = {
+        ...form,
+        description: form.description.trim() || composeDescription(form),
+      }
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -213,20 +294,29 @@ export default function PostJobPage() {
               <input
                 value={form.companyName}
                 onChange={e => set("companyName", e.target.value)}
-                placeholder="예: 삼성전자 협력사, 청주 A공장"
+                placeholder="예: 대성정밀, 청주 A공장"
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 h-14 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-xs text-gray-400">가입 시 인증한 상호명이 자동으로 입력돼요</p>
             </div>
 
-            {/* 위치 */}
+            {/* 위치: 지역 선택 + 상세 */}
             <div className="space-y-2">
               <label className="text-base font-medium text-gray-700 flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" /> 근무 위치
+                <MapPin className="h-4 w-4" /> 근무 지역
               </label>
+              <div className="flex flex-wrap gap-2">
+                {REGIONS.map(r => (
+                  <button key={r} onClick={() => setRegion(r)}
+                    className={`min-h-[42px] px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${region === r ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
               <input
-                value={form.location}
-                onChange={e => set("location", e.target.value)}
-                placeholder="예: 충북 청주시 흥덕구 오송읍"
+                value={locationDetail}
+                onChange={e => setLocationDetail(e.target.value)}
+                placeholder="상세 주소 (예: 청주시 흥덕구 오송읍)"
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 h-14 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -258,6 +348,19 @@ export default function PostJobPage() {
               <label className="text-base font-medium text-gray-700 flex items-center gap-1.5">
                 <Clock className="h-4 w-4" /> 근무 시간
               </label>
+              {/* 프리셋 */}
+              <div className="flex flex-wrap gap-2 mb-1">
+                {TIME_PRESETS.map(p => {
+                  const active = form.startTime === p.start && form.endTime === p.end
+                  return (
+                    <button key={p.label}
+                      onClick={() => { set("startTime", p.start); set("endTime", p.end) }}
+                      className={`min-h-[42px] px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${active ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"}`}>
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-sm text-gray-500 mb-1">시작</p>
@@ -294,22 +397,42 @@ export default function PostJobPage() {
               </label>
               <div className="flex gap-2 mb-2">
                 {[{ val: "daily", label: "일당" }, { val: "hourly", label: "시급" }].map(({ val, label }) => (
-                  <button key={val} onClick={() => set("payType", val)}
+                  <button key={val} onClick={() => { set("payType", val); set("payAmount", ""); setCustomPay(false) }}
                     className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-medium border transition-all ${form.payType === val ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600"}`}>
                     {label}
                   </button>
                 ))}
               </div>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={form.payAmount}
-                  onChange={e => set("payAmount", e.target.value)}
-                  placeholder={form.payType === "daily" ? "예: 120000" : "예: 12000"}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 h-14 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
+              {/* 금액 프리셋 */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {(PAY_PRESETS[form.payType] ?? []).map(amount => {
+                  const active = !customPay && form.payAmount === String(amount)
+                  return (
+                    <button key={amount}
+                      onClick={() => { set("payAmount", String(amount)); setCustomPay(false) }}
+                      className={`min-h-[42px] px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${active ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"}`}>
+                      {amount.toLocaleString()}원{form.payType === "hourly" && amount === 10030 ? " (최저)" : ""}
+                    </button>
+                  )
+                })}
+                <button
+                  onClick={() => { setCustomPay(true); set("payAmount", "") }}
+                  className={`min-h-[42px] px-3.5 py-2 rounded-xl text-sm font-medium border border-dashed transition-all ${customPay ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-500 hover:border-gray-400"}`}>
+                  직접 입력
+                </button>
               </div>
+              {customPay && (
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={form.payAmount}
+                    onChange={e => set("payAmount", e.target.value)}
+                    placeholder={form.payType === "daily" ? "예: 125000" : "예: 12500"}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 h-14 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
+                </div>
+              )}
             </div>
 
             {/* 당일지급 / 픽업 */}
@@ -360,14 +483,24 @@ export default function PostJobPage() {
 
             {/* 상세 설명 */}
             <div className="space-y-2">
-              <label className="text-base font-medium text-gray-700">상세 업무 설명 (선택)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-base font-medium text-gray-700">상세 업무 설명 (선택)</label>
+                <button
+                  onClick={() => set("description", composeDescription(form))}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  선택한 내용으로 자동 작성
+                </button>
+              </div>
               <textarea
                 value={form.description}
                 onChange={e => set("description", e.target.value)}
-                placeholder="예: 반도체 부품 단순 조립 작업입니다. 서서 하는 작업이며 체력 요구됩니다. 경험자 우대하나 초보도 가능합니다."
-                rows={5}
+                placeholder="비워두면 선택한 항목들로 자동 작성됩니다"
+                rows={7}
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
+              <p className="text-xs text-gray-400">직접 쓰지 않아도 돼요 — 지금까지 선택한 항목으로 공고 설명이 자동으로 만들어져요</p>
             </div>
           </div>
         )}

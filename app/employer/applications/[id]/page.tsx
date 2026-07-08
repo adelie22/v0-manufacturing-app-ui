@@ -11,6 +11,9 @@ type WorkerProfile = {
   bio: string | null
   workHistory: string[]
   skills: string[]
+  desiredRegions?: string[]
+  desiredCategories?: string[]
+  experienceLevel?: string | null
 }
 
 type Application = {
@@ -27,6 +30,7 @@ type Application = {
     workerProfile: WorkerProfile | null
   }
   job: {
+    id: string
     companyName: string
     category: string
     dates: string[]
@@ -91,7 +95,10 @@ export default function ApplicationDetailPage() {
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-8">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3">
-        <button onClick={() => router.back()} className="p-2 -ml-2 rounded-xl hover:bg-gray-100">
+        <button
+          onClick={() => router.push(application ? `/employer/jobs/${application.job.id}` : "/employer")}
+          className="p-2 -ml-2 rounded-xl hover:bg-gray-100"
+        >
           <ArrowLeft className="h-5 w-5 text-gray-700" />
         </button>
         <h1 className="text-base font-bold text-gray-900">지원자 정보</h1>
@@ -158,6 +165,23 @@ export default function ApplicationDetailPage() {
               <Briefcase className="h-5 w-5 text-blue-600" />
               간단 이력서
             </h2>
+
+            {/* 경력 수준 + 희망 조건 */}
+            {(profile.experienceLevel || (profile.desiredRegions?.length ?? 0) > 0 || (profile.desiredCategories?.length ?? 0) > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {profile.experienceLevel && (
+                  <span className="text-sm font-semibold px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full">
+                    경력 {profile.experienceLevel}
+                  </span>
+                )}
+                {profile.desiredRegions?.map((r) => (
+                  <span key={r} className="text-sm px-3 py-1 bg-gray-100 text-gray-600 rounded-full">📍 {r}</span>
+                ))}
+                {profile.desiredCategories?.map((c) => (
+                  <span key={c} className="text-sm px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{c}</span>
+                ))}
+              </div>
+            )}
 
             {profile.bio && (
               <div>

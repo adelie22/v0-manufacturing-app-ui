@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -34,42 +34,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
-  const [resRole, setResRole] = useState<"employer" | "worker">("employer");
-  const [resPhone, setResPhone] = useState("");
-  const [resName, setResName] = useState("");
-  const [resStatus, setResStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [resMsg, setResMsg] = useState("");
-  const reservationRef = useRef<HTMLElement>(null);
-
-  const handleReservation = async () => {
-    setResStatus("loading");
-    const res = await fetch("/api/reservation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: resName, phone: resPhone, role: resRole }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setResStatus("done");
-      setResMsg("사전예약이 완료됐습니다! 오픈되면 연락드릴게요 😊");
-    } else {
-      setResStatus("error");
-      setResMsg(data.error ?? "오류가 발생했습니다. 다시 시도해주세요.");
-    }
-  };
   const { data: session } = useSession();
   const workerHref = session ? "/jobs" : "/auth/login?callbackUrl=/jobs";
-
-  const scrollToReservation = () => {
-    reservationRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   const navItems = [
     { label: "일자리찾기", href: "/jobs", icon: Search },
     { label: "공고등록", href: "/employer/post", icon: PlusCircle },
-    { label: "무료 근로계약서", href: "/contract", icon: FileText },
-    { label: "회사소개", href: "/about", icon: Building2 },
-    { label: "요금안내", href: "/pricing", icon: CreditCard },
+    { label: "정부지원혜택", href: "/benefits", icon: Gift },
   ];
 
   return (
@@ -552,98 +523,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 사전예약 섹션 */}
-      <section ref={reservationRef} className="px-4 sm:px-6 py-20 bg-slate-50">
-        <div className="max-w-lg mx-auto">
-          <div className="text-center mb-8">
-            <span className="inline-block text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full mb-3">
-              사전예약
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
-              오픈 알림 받기
-            </h2>
-            <p className="text-sm text-gray-500">
-              정식 오픈 시 가장 먼저 연락드립니다
-            </p>
-          </div>
-
-          {resStatus === "done" ? (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
-              <p className="text-4xl mb-4">🎉</p>
-              <p className="text-base font-semibold text-gray-900">{resMsg}</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-4">
-              {/* 역할 선택 */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-2xl">
-                {(["employer", "worker"] as const).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setResRole(r)}
-                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      resRole === r
-                        ? "bg-white text-blue-600 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {r === "employer" ? "🏭 사장님" : "👷 구직자"}
-                  </button>
-                ))}
-              </div>
-
-              {/* 이름 (선택) */}
-              <input
-                type="text"
-                placeholder="이름 (선택)"
-                value={resName}
-                onChange={(e) => setResName(e.target.value)}
-                className="w-full h-12 px-4 text-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
-
-              {/* 전화번호 */}
-              <input
-                type="tel"
-                placeholder="전화번호 (010-0000-0000)"
-                value={resPhone}
-                onChange={(e) => setResPhone(e.target.value)}
-                className="w-full h-12 px-4 text-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
-
-              {resStatus === "error" && (
-                <p className="text-sm text-red-500 text-center">{resMsg}</p>
-              )}
-
-              {/* 신청 버튼 */}
-              <Button
-                onClick={handleReservation}
-                disabled={resStatus === "loading" || !resPhone}
-                className="w-full h-12 rounded-2xl text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white"
-              >
-                {resStatus === "loading" ? "신청 중..." : "오픈 알림 신청"}
-              </Button>
-
-              {/* 카카오톡 버튼 */}
-              <div className="relative flex items-center gap-3">
-                <div className="flex-1 h-px bg-gray-100" />
-                <span className="text-xs text-gray-400">또는</span>
-                <div className="flex-1 h-px bg-gray-100" />
-              </div>
-              <a
-                href="https://open.kakao.com/o/placeholder"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl text-sm font-semibold bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] transition-colors"
-              >
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#191919]">
-                  <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.634 1.628 4.953 4.11 6.318L5 21l4.793-2.634A11.3 11.3 0 0 0 12 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z" />
-                </svg>
-                카카오톡으로 알림 받기
-              </a>
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-900">
         <div className="max-w-3xl mx-auto text-center">
@@ -672,12 +551,6 @@ export default function HomePage() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
-            <button
-              onClick={scrollToReservation}
-              className="mt-6 text-sm text-slate-500 hover:text-slate-300 underline underline-offset-4 transition-colors"
-            >
-              아직 준비 중이라면 사전예약부터
-            </button>
           </FadeIn>
         </div>
       </section>
@@ -688,7 +561,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="px-4 sm:px-6 py-16 bg-slate-950">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-2 gap-8 mb-12 max-w-lg">
             <div>
               <h3 className="font-semibold text-white mb-4">서비스</h3>
               <ul className="space-y-3 text-slate-400 text-sm">
@@ -703,43 +576,8 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contract" className="hover:text-white transition-colors">
-                    무료 근로계약서
-                  </Link>
-                </li>
-                <li>
                   <Link href="/benefits" className="hover:text-white transition-colors">
                     정부지원혜택
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-4">회사</h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
-                <li>
-                  <Link href="/about" className="hover:text-white transition-colors">
-                    회사소개
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/careers" className="hover:text-white transition-colors">
-                    채용
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-4">고객지원</h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
-                <li>
-                  <Link href="/pricing" className="hover:text-white transition-colors">
-                    요금안내
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
-                    문의하기
                   </Link>
                 </li>
               </ul>

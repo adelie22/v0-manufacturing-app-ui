@@ -15,7 +15,13 @@ function LoginForm() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      router.replace(callbackUrl)
+      // callbackUrl이 루트면 역할별 홈으로
+      const role = (session.user as { role?: string }).role
+      const dest =
+        callbackUrl === "/"
+          ? role === "employer" ? "/employer" : role === "worker" ? "/jobs" : "/"
+          : callbackUrl
+      router.replace(dest)
     }
   }, [status, session, callbackUrl, router])
 

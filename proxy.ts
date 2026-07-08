@@ -13,6 +13,8 @@ const publicPaths = [
   "/lp",
   "/benefits",
   "/api/benefits",
+  "/terms",
+  "/privacy",
 ]
 
 export default auth(async function middleware(

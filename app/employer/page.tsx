@@ -40,6 +40,27 @@ type JobPosting = {
   _count: { applications: number }
 }
 
+type EmployerApplication = {
+  id: string
+  status: string // pending | accepted | rejected
+  selectedDates: string[]
+  createdAt: string
+  worker: {
+    id: string
+    name: string | null
+    image: string | null
+    phone: string | null
+    workerProfile: { experienceLevel?: string | null; skills?: string[] } | null
+  }
+  job: { id: string; companyName: string; category: string; dates: string[] }
+}
+
+const APP_STATUS_META: Record<string, { label: string; color: string }> = {
+  pending: { label: "검토중", color: "bg-amber-100 text-amber-700" },
+  accepted: { label: "수락", color: "bg-emerald-100 text-emerald-700" },
+  rejected: { label: "거절", color: "bg-red-100 text-red-600" },
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Math.max(0, Date.now() - new Date(dateStr).getTime())
   const minutes = Math.floor(diff / 60000)
@@ -55,7 +76,7 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 export default function EmployerDashboard() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<"home" | "posts">("home")
+  const [activeTab, setActiveTab] = useState<"home" | "posts" | "applicants">("home")
   const [showPostTypeModal, setShowPostTypeModal] = useState(false)
 
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -66,6 +87,10 @@ export default function EmployerDashboard() {
 
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [jobsLoading, setJobsLoading] = useState(true)
+
+  const [apps, setApps] = useState<EmployerApplication[]>([])
+  const [appsLoading, setAppsLoading] = useState(true)
+  const [appFilter, setAppFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all")
 
   const today = new Date()
   const todayStr = `${today.getMonth() + 1}월 ${today.getDate()}일 ${WEEKDAYS[today.getDay()]}요일`
@@ -92,16 +117,28 @@ export default function EmployerDashboard() {
     finally { setJobsLoading(false) }
   }, [])
 
+  const fetchApps = useCallback(async () => {
+    try {
+      const res = await fetch("/api/employer/applications")
+      if (!res.ok) return
+      const data = await res.json()
+      setApps(Array.isArray(data) ? data : [])
+    } catch {}
+    finally { setAppsLoading(false) }
+  }, [])
+
   useEffect(() => {
     fetchNotifications()
     fetchJobs()
+    fetchApps()
     const interval = setInterval(fetchNotifications, 30000)
     return () => clearInterval(interval)
-  }, [fetchNotifications, fetchJobs])
+  }, [fetchNotifications, fetchJobs, fetchApps])
 
   useEffect(() => {
     if (activeTab === "posts") fetchJobs()
-  }, [activeTab, fetchJobs])
+    if (activeTab === "applicants") fetchApps()
+  }, [activeTab, fetchJobs, fetchApps])
 
   useEffect(() => {
     if (!showNotifications) return
@@ -128,9 +165,6 @@ export default function EmployerDashboard() {
   }
 
   const activeJobs = jobs.filter((j) => j.status === "active")
-  const pendingCount = notifications.filter(
-    (n) => n.type === "new_application" && !n.isRead
-  ).length
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
@@ -343,6 +377,93 @@ export default function EmployerDashboard() {
           </section>
         )}
 
+        {/* ── 지원자 관리 탭 ─────────────────────────────────────── */}
+        {activeTab === "applicants" && (
+          <section>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">지원자 관리</h2>
+
+              {/* 상태 필터 */}
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+                {([
+                  { key: "all", label: `전체 ${apps.length}` },
+                  { key: "pending", label: `검토중 ${apps.filter((a) => a.status === "pending").length}` },
+                  { key: "accepted", label: `수락 ${apps.filter((a) => a.status === "accepted").length}` },
+                  { key: "rejected", label: `거절 ${apps.filter((a) => a.status === "rejected").length}` },
+                ] as const).map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setAppFilter(f.key)}
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
+                      appFilter === f.key ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {appsLoading ? (
+                <div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>
+              ) : (
+                (() => {
+                  const filtered = appFilter === "all" ? apps : apps.filter((a) => a.status === appFilter)
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-12 text-center">
+                        <p className="text-base text-gray-400">
+                          {appFilter === "all" ? "아직 지원자가 없습니다" : "해당 상태의 지원자가 없습니다"}
+                        </p>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="space-y-1">
+                      {filtered.map((app) => {
+                        const meta = APP_STATUS_META[app.status] ?? APP_STATUS_META.pending
+                        return (
+                          <Link key={app.id} href={`/employer/applications/${app.id}`}>
+                            <div className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-blue-700 font-bold text-sm">
+                                    {(app.worker.name ?? "?").charAt(0)}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-base font-semibold text-gray-900 truncate">
+                                      {app.worker.name ?? "이름 없음"}
+                                    </p>
+                                    {app.worker.workerProfile?.experienceLevel && (
+                                      <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                                        {app.worker.workerProfile.experienceLevel}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-500 truncate mt-0.5">
+                                    {app.job.companyName} · {app.job.category} · {timeAgo(app.createdAt)} 지원
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${meta.color}`}>
+                                  {meta.label}
+                                </span>
+                                <ChevronRight className="h-5 w-5 text-gray-300" />
+                              </div>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )
+                })()
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ── 홈 탭 ─────────────────────────────────────────────── */}
         {activeTab === "home" && (
           <>
@@ -368,18 +489,22 @@ export default function EmployerDashboard() {
                 <p className="text-xs text-blue-500 mt-1">탭해서 보기 →</p>
               </button>
 
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <button
+                onClick={() => setActiveTab("applicants")}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-left hover:border-amber-200 active:bg-amber-50 transition-colors w-full"
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
                     <Users className="h-5 w-5 text-amber-600" />
                   </div>
-                  <span className="text-sm font-medium text-gray-500">새 지원자</span>
+                  <span className="text-sm font-medium text-gray-500">검토 대기 지원자</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-amber-600">{pendingCount}</span>
+                  <span className="text-3xl font-bold text-amber-600">{apps.filter((a) => a.status === "pending").length}</span>
                   <span className="text-base text-gray-500">명</span>
                 </div>
-              </div>
+                <p className="text-xs text-amber-500 mt-1">탭해서 보기 →</p>
+              </button>
             </section>
 
             {/* 공고등록 버튼 */}
@@ -464,6 +589,20 @@ export default function EmployerDashboard() {
           >
             <FileText className="h-5 w-5" />
             <span className="text-sm font-medium">공고관리</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("applicants")}
+            className={`relative flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
+              activeTab === "applicants" ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <Users className="h-5 w-5" />
+            <span className="text-sm font-medium">지원자</span>
+            {apps.filter((a) => a.status === "pending").length > 0 && (
+              <span className="absolute -top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                {apps.filter((a) => a.status === "pending").length}
+              </span>
+            )}
           </button>
         </div>
       </nav>

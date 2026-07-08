@@ -207,9 +207,25 @@ export default function JobsPage() {
           <Link href="/" className="flex items-center gap-2">
             <span className="font-bold text-gray-900 font-[family-name:var(--font-dm-sans)] tracking-tight">Da-Itda</span>
           </Link>
-          <Link href="/worker/profile" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-            내 이력서
-          </Link>
+          {/* 역할별 네비게이션 */}
+          {session?.user?.role === "worker" ? (
+            <div className="flex items-center gap-4">
+              <Link href="/worker/profile" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                내 이력서
+              </Link>
+              <Link href="/worker" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
+                마이페이지
+              </Link>
+            </div>
+          ) : session?.user?.role === "employer" ? (
+            <Link href="/employer" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+              사장님 홈
+            </Link>
+          ) : (
+            <Link href="/auth/login?callbackUrl=/jobs" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+              로그인
+            </Link>
+          )}
         </div>
       </header>
 
