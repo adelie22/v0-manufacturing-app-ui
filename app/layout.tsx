@@ -7,8 +7,8 @@ import './globals.css'
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
-  title: '다잇다 - 제조업 일용직 매칭 플랫폼',
-  description: '신뢰 기반 제조업 일용직 매칭 서비스. 사장님과 구직자를 연결합니다.',
+  title: '다잇다 - 일해보고 채용하는 제조현장 전문 플랫폼',
+  description: '면접 대신 3~7일 트라이얼 근무 후 정규직 전환. 중소 제조현장 사장님과 구직자를 부담 없이 연결합니다.',
   generator: 'v0.app',
   icons: {
     icon: [
