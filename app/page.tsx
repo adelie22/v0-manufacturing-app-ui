@@ -203,7 +203,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 max-w-2xl mx-auto mb-12">
               {[
                 { step: "1", label: "지원 · 매칭", sub: "이력서 대신 현장으로" },
-                { step: "2", label: "3~7일 근무", sub: "일당은 일급으로 정산" },
+                { step: "2", label: "3~7일 근무", sub: "일해보며 서로 확인" },
                 { step: "3", label: "정규직 전환", sub: "서로 맞을 때만" },
               ].map((item, i) => (
                 <div key={item.step} className="flex items-center flex-1">
@@ -367,7 +367,7 @@ export default function HomePage() {
               </h2>
               <p className="text-base md:text-lg text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed">
                 현장 일은 몇 시간만 같이 해봐도 압니다.
-                호주의 트라이얼 근무처럼, 짧게 일해보고 확신이 들 때만 정규직으로 전환하세요.
+                짧게 일해보고 확신이 들 때만 정규직으로 전환하세요.
               </p>
             </div>
           </FadeIn>
@@ -385,8 +385,8 @@ export default function HomePage() {
                 step: "STEP 2",
                 icon: Banknote,
                 title: "3~7일 트라이얼 근무",
-                desc: "정식 일용직으로 근무합니다. 근로계약서는 자동으로 작성되고, 일한 만큼 일급으로 정산됩니다. 안 맞으면 여기서 끝 — 서로 부담이 없습니다.",
-                points: ["근로계약서 자동 작성", "일급 정산 보장"],
+                desc: "일용직으로 짧게 근무하며 서로를 확인합니다. 안 맞으면 기간이 끝나면 자연스럽게 종료 — 서로 부담이 없습니다.",
+                points: ["원하는 날짜만 골라 근무", "부담 없는 종료"],
               },
               {
                 step: "STEP 3",
@@ -447,8 +447,8 @@ export default function HomePage() {
                   {[
                     ["채용 실패 리스크 제로", "일하는 걸 직접 보고 뽑으니, 뽑고 후회할 일이 없습니다."],
                     ["해고 걱정 없는 검증 기간", "트라이얼은 일용직 계약 — 안 맞으면 다음 사람을 만나면 됩니다."],
-                    ["행정 부담 최소화", "근로계약서·정산을 플랫폼이 처리합니다."],
-                    ["정규직 전환 지원금", "전환 시 받을 수 있는 정부지원혜택을 자동으로 알려드립니다."],
+                    ["지원 즉시 실시간 알림", "지원자가 생기면 바로 알림으로 확인하고 수락하세요."],
+                    ["정규직 전환 지원금", "전환 시 받을 수 있는 정부지원혜택을 모아서 알려드립니다."],
                   ].map(([title, desc]) => (
                     <li key={title} className="flex gap-3">
                       <BadgeCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
@@ -473,7 +473,7 @@ export default function HomePage() {
                 <ul className="space-y-4">
                   {[
                     ["들어가보고 결정", "작업 환경·분위기·사람들, 며칠 일해보고 판단하세요."],
-                    ["일한 만큼 바로 일급", "트라이얼 기간도 정당한 근무 — 일급으로 정산받습니다."],
+                    ["합격 소식 실시간 알림", "지원 결과를 기다릴 필요 없이 앱에서 바로 확인하세요."],
                     ["어색한 퇴사 통보 불필요", "기간이 끝나면 자연스럽게 종료. 도망칠 필요가 없습니다."],
                     ["여러 곳을 겪어보고 선택", "맞는 곳을 찾을 때까지, 가벼운 마음으로 옮겨 다니세요."],
                   ].map(([title, desc]) => (
@@ -521,19 +521,19 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               {
-                icon: FileText,
-                title: "근로계약서 자동 작성",
-                desc: "트라이얼도 정식 근로 — 계약서 없이 일하지 않습니다",
-              },
-              {
-                icon: Banknote,
-                title: "일급 정산 보장",
-                desc: "일한 날의 임금은 반드시 지급됩니다",
-              },
-              {
                 icon: ShieldCheck,
-                title: "검증된 사업장",
-                desc: "사업자 인증을 거친 제조현장만 공고를 올립니다",
+                title: "사업자 인증 사업장",
+                desc: "사업자등록번호 인증을 거친 사장님만 공고를 올립니다",
+              },
+              {
+                icon: BadgeCheck,
+                title: "실시간 지원·합격 알림",
+                desc: "지원과 합격 소식을 놓치지 않게 바로 알려드립니다",
+              },
+              {
+                icon: CalendarCheck,
+                title: "날짜 기반 간편 지원",
+                desc: "이력서 부담 없이, 일할 수 있는 날짜만 골라 지원합니다",
               },
             ].map((item, i) => (
               <FadeIn key={item.title} delay={i * 100}>

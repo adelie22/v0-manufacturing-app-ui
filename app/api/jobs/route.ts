@@ -47,6 +47,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "사장님만 공고를 등록할 수 있습니다" }, { status: 403 })
   }
 
+  // 사업자 인증 확인 (세션이 아닌 DB 기준)
+  const employer = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { businessVerified: true },
+  })
+  if (!employer?.businessVerified) {
+    return NextResponse.json(
+      { error: "공고 등록을 위해 사업자 인증이 필요합니다. 사장님 홈에서 인증을 완료해주세요.", code: "BUSINESS_UNVERIFIED" },
+      { status: 403 }
+    )
+  }
+
   const body = await req.json()
   const { category, companyName, location, dates, startTime, endTime,
     headcount, payType, payAmount, instantPay, pickup, description, selectedTasks, requirements } = body

@@ -41,7 +41,7 @@ function LoginForm() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">다잇다</h1>
-            <p className="text-gray-500 mt-2">제조업 일용직 매칭 플랫폼</p>
+            <p className="text-gray-500 mt-2">일해보고 채용하는 제조현장 플랫폼</p>
           </div>
         </div>
 

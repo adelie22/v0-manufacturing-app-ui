@@ -74,6 +74,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // @ts-expect-error custom field
         session.user.isProfileComplete =
           (user as { isProfileComplete?: boolean }).isProfileComplete ?? false
+        // @ts-expect-error custom field
+        session.user.businessVerified =
+          (user as { businessVerified?: boolean }).businessVerified ?? false
       }
       return session
     },

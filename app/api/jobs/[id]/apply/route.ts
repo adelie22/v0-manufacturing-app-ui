@@ -29,8 +29,21 @@ export async function POST(
     return NextResponse.json({ error: "이미 지원한 공고입니다" }, { status: 409 })
   }
 
+  // 근무 가능 날짜 (공고 날짜의 부분집합만 허용)
+  let selectedDates: string[] = []
+  try {
+    const body = await req.json()
+    if (Array.isArray(body?.selectedDates)) {
+      selectedDates = body.selectedDates.filter(
+        (d: unknown): d is string => typeof d === "string" && job.dates.includes(d)
+      )
+    }
+  } catch {
+    // body 없이 지원하는 경우 허용 (전체 날짜 근무 가능으로 간주)
+  }
+
   const application = await prisma.application.create({
-    data: { workerId: session.user.id, jobId },
+    data: { workerId: session.user.id, jobId, selectedDates },
   })
 
   // 사장님에게 알림 생성

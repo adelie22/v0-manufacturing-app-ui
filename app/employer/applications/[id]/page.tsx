@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, User, Phone, Briefcase, CheckCircle, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 type WorkerProfile = {
   bio: string | null
@@ -15,6 +16,7 @@ type WorkerProfile = {
 type Application = {
   id: string
   status: string
+  selectedDates: string[]
   createdAt: string
   worker: {
     id: string
@@ -49,12 +51,21 @@ export default function ApplicationDetailPage() {
 
   const handleDecision = async (status: "accepted" | "rejected") => {
     setSubmitting(true)
-    await fetch(`/api/employer/applications/${id}`, {
+    const res = await fetch(`/api/employer/applications/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     })
-    setApplication((prev) => prev ? { ...prev, status } : prev)
+    if (res.ok) {
+      setApplication((prev) => prev ? { ...prev, status } : prev)
+      toast.success(
+        status === "accepted" ? "지원자를 수락했습니다" : "지원자를 거절했습니다",
+        { description: "지원자에게 알림이 전송됐어요" }
+      )
+    } else {
+      const data = await res.json().catch(() => ({}))
+      toast.error(data.error ?? "처리 중 오류가 발생했습니다")
+    }
     setSubmitting(false)
   }
 
@@ -119,6 +130,23 @@ export default function ApplicationDetailPage() {
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
               <Phone className="h-4 w-4 text-gray-400" />
               <span className="text-sm text-gray-700">{worker.phone}</span>
+            </div>
+          )}
+
+          {/* 근무 가능 날짜 */}
+          {application.selectedDates.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-50">
+              <p className="text-sm font-semibold text-gray-500 mb-2">근무 가능 날짜</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[...application.selectedDates].sort().map((d) => {
+                  const [, m, day] = d.split("-")
+                  return (
+                    <span key={d} className="text-sm font-medium px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg">
+                      {Number(m)}/{Number(day)}
+                    </span>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>

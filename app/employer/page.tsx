@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import BusinessVerifyBanner from "@/components/BusinessVerifyBanner"
 import {
   ChevronRight,
   Bell,
@@ -345,6 +346,9 @@ export default function EmployerDashboard() {
         {/* ── 홈 탭 ─────────────────────────────────────────────── */}
         {activeTab === "home" && (
           <>
+            {/* 사업자 인증 배너 (미인증 시) */}
+            <BusinessVerifyBanner />
+
             {/* 요약 카드 2개 */}
             <section className="grid grid-cols-2 gap-3">
               <button

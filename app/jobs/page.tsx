@@ -17,6 +17,7 @@ import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { format, parseISO, eachDayOfInterval, isSameDay } from "date-fns"
 import { ko } from "date-fns/locale"
 import type { DateRange } from "react-day-picker"
+import { toast } from "sonner"
 
 const REGIONS = ["전체", "서울", "경기", "인천", "부산", "대구", "대전", "광주", "충북", "충남", "경북", "경남", "전북", "전남"]
 
@@ -136,18 +137,46 @@ export default function JobsPage() {
 
   useEffect(() => { fetchJobs() }, [fetchJobs])
 
-  const handleApply = async (jobId: string) => {
+  // 지원 확인 드로어
+  const [applyTarget, setApplyTarget] = useState<Job | null>(null)
+  const [applyDates, setApplyDates] = useState<Set<string>>(new Set())
+
+  const openApplyDrawer = (job: Job) => {
     if (!session) {
       window.location.href = `/auth/login?callbackUrl=/jobs`
       return
     }
+    setApplyTarget(job)
+    setApplyDates(new Set(job.dates)) // 기본: 전체 날짜 가능
+  }
+
+  const toggleApplyDate = (date: string) => {
+    setApplyDates(prev => {
+      const next = new Set(prev)
+      if (next.has(date)) next.delete(date)
+      else next.add(date)
+      return next
+    })
+  }
+
+  const handleApply = async () => {
+    if (!applyTarget) return
+    const jobId = applyTarget.id
     setApplying(jobId)
-    const res = await fetch(`/api/jobs/${jobId}/apply`, { method: "POST" })
+    const res = await fetch(`/api/jobs/${jobId}/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selectedDates: [...applyDates].sort() }),
+    })
     if (res.ok) {
       setAppliedIds(prev => new Set([...prev, jobId]))
+      setApplyTarget(null)
+      toast.success("지원 완료!", {
+        description: "사장님이 확인하면 알림으로 알려드릴게요",
+      })
     } else {
       const data = await res.json()
-      alert(data.error ?? "오류가 발생했습니다")
+      toast.error(data.error ?? "오류가 발생했습니다")
     }
     setApplying(null)
   }
@@ -344,7 +373,7 @@ export default function JobsPage() {
                 {/* 지원 버튼 (구직자만) */}
                 {isWorker && (
                   <Button
-                    onClick={() => handleApply(job.id)}
+                    onClick={() => openApplyDrawer(job)}
                     disabled={applied || applying === job.id}
                     className={`w-full h-11 rounded-2xl text-sm font-semibold ${applied ? "bg-gray-100 text-gray-400" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
                   >
@@ -461,6 +490,79 @@ export default function JobsPage() {
               }
             </Button>
           </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* 지원 확인 바텀시트 */}
+      <Drawer open={!!applyTarget} onOpenChange={(open) => { if (!open) setApplyTarget(null) }}>
+        <DrawerContent className="bg-white">
+          {applyTarget && (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle className="text-lg font-bold text-gray-900">
+                  {applyTarget.companyName}에 지원하기
+                </DrawerTitle>
+                <DrawerDescription className="text-sm text-gray-500 mt-1">
+                  일할 수 있는 날짜를 확인해주세요. 못 가는 날은 눌러서 빼면 돼요.
+                </DrawerDescription>
+              </DrawerHeader>
+
+              <div className="px-4 pb-2 overflow-y-auto">
+                {/* 공고 요약 */}
+                <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                    {applyTarget.location}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-3.5 w-3.5 text-gray-400" />
+                    {applyTarget.startTime} ~ {applyTarget.endTime}
+                    <span className="font-semibold text-blue-600 ml-1">
+                      {applyTarget.payType === "daily" ? "일급" : "시급"} {applyTarget.payAmount.toLocaleString()}원
+                    </span>
+                  </div>
+                </div>
+
+                {/* 날짜 토글 */}
+                <div className="flex flex-wrap gap-2">
+                  {[...applyTarget.dates].sort().map(date => {
+                    const selected = applyDates.has(date)
+                    const d = parseISO(date)
+                    return (
+                      <button
+                        key={date}
+                        onClick={() => toggleApplyDate(date)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                          selected
+                            ? "border-blue-600 bg-blue-50 text-blue-700"
+                            : "border-gray-200 bg-white text-gray-400"
+                        }`}
+                      >
+                        {format(d, "M/d (EEE)", { locale: ko })}
+                      </button>
+                    )
+                  })}
+                </div>
+                {applyDates.size === 0 && (
+                  <p className="text-sm text-red-500 mt-3">최소 1일 이상 선택해주세요</p>
+                )}
+              </div>
+
+              <DrawerFooter>
+                <Button
+                  onClick={handleApply}
+                  disabled={applyDates.size === 0 || applying === applyTarget.id}
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-base font-semibold disabled:opacity-50"
+                >
+                  {applying === applyTarget.id ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    `${applyDates.size}일 근무 가능으로 지원하기`
+                  )}
+                </Button>
+              </DrawerFooter>
+            </>
+          )}
         </DrawerContent>
       </Drawer>
     </div>

@@ -1,426 +1,422 @@
 "use client"
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useRef, useCallback } from "react"
+import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   MapPin,
   Clock,
   Wallet,
-  CheckCircle,
   ChevronRight,
-  Trophy,
-  Zap,
-  Star,
-  TrendingUp,
-  Car,
-  Banknote,
+  Search,
   User,
   Home,
-  Search,
-  Building2,
-  HelpCircle,
+  Bell,
   FileText,
-  Award,
-  Target,
-  Shield,
   LogOut,
-  Flame,
-  Calendar,
-  Settings,
+  CalendarDays,
+  CheckCircle2,
   XCircle,
-  AlertCircle,
+  Hourglass,
 } from "lucide-react"
 
-// Mock data
-const userData = {
-  name: "김민수",
-  email: "minsu.kim@email.com",
-  phone: "010-1234-5678",
-  level: 7,
-  trustScore: 85,
-  nextLevelScore: 100,
-  streak: 3,
-  totalEarnings: 1850000,
-  availableBalance: 620000,
-  totalWorkDays: 47,
-  monthWorkDays: 12,
-  monthEarnings: 1560000,
-  completionRate: 98,
-  joinDate: "2024년 8월",
+type Notification = {
+  id: string
+  type: string
+  title: string
+  body: string
+  isRead: boolean
+  createdAt: string
 }
 
-const recommendedJobs = [
-  {
-    id: 1,
-    company: "삼성전자 협력사",
-    task: "PCB 조립 작업",
-    location: "청주 오창읍",
-    distance: "3.2km",
-    time: "오전 9시 - 오후 6시",
-    pay: 130000,
-    sameDay: true,
-    urgent: true,
-  },
-  {
-    id: 2,
-    company: "청주물류센터",
-    task: "상품 포장 및 분류",
-    location: "청주 오송읍",
-    distance: "5.8km",
-    time: "오전 8시 - 오후 5시",
-    pay: 120000,
-    sameDay: true,
-    urgent: false,
-  },
-]
+type Application = {
+  id: string
+  status: string // pending | accepted | rejected
+  selectedDates: string[]
+  createdAt: string
+  job: {
+    id: string
+    companyName: string
+    category: string
+    location: string
+    dates: string[]
+    startTime: string
+    endTime: string
+    payType: string
+    payAmount: number
+    status: string
+  }
+}
 
-const allJobs = [
-  ...recommendedJobs,
-  {
-    id: 3,
-    company: "대한제약",
-    task: "의약품 검수 작업",
-    location: "청주 흥덕구",
-    distance: "4.1km",
-    time: "오전 10시 - 오후 7시",
-    pay: 140000,
-    sameDay: false,
-    urgent: false,
-  },
-  {
-    id: 4,
-    company: "충북식품",
-    task: "식품 포장 작업",
-    location: "청주 서원구",
-    distance: "2.5km",
-    time: "오전 7시 - 오후 4시",
-    pay: 125000,
-    sameDay: true,
-    urgent: true,
-  },
-  {
-    id: 5,
-    company: "한국자동차부품",
-    task: "부품 조립 및 검사",
-    location: "청주 청원구",
-    distance: "6.2km",
-    time: "오전 8시 - 오후 5시",
-    pay: 135000,
-    sameDay: false,
-    urgent: false,
-  },
-]
+const APP_STATUS: Record<string, { label: string; color: string; icon: typeof Hourglass }> = {
+  pending: { label: "검토중", color: "bg-amber-100 text-amber-700", icon: Hourglass },
+  accepted: { label: "합격", color: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
+  rejected: { label: "미선발", color: "bg-gray-100 text-gray-500", icon: XCircle },
+}
 
-const achievements = [
-  { id: 1, title: "첫 출근 완료", description: "첫 번째 일을 완료했어요", icon: Award, earned: true },
-  { id: 2, title: "5일 연속 근무", description: "5일 연속으로 근무했어요", icon: Flame, earned: true },
-  { id: 3, title: "신뢰 점수 80+", description: "신뢰 점수가 80점을 넘었어요", icon: Shield, earned: true },
-  { id: 4, title: "10일 연속 근무", description: "10일 연속으로 근무해보세요", icon: Target, earned: false },
-  { id: 5, title: "레벨 10 달성", description: "레벨 10을 달성해보세요", icon: Trophy, earned: false },
-]
+function timeAgo(dateStr: string): string {
+  const diff = Math.max(0, Date.now() - new Date(dateStr).getTime())
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return "방금 전"
+  if (minutes < 60) return `${minutes}분 전`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}시간 전`
+  return `${Math.floor(hours / 24)}일 전`
+}
 
-type TabId = "home" | "jobs" | "profile"
+function formatDates(dates: string[]): string {
+  if (!dates || dates.length === 0) return ""
+  const sorted = [...dates].sort()
+  const fmt = (d: string) => {
+    const [, m, day] = d.split("-")
+    return `${Number(m)}/${Number(day)}`
+  }
+  if (sorted.length === 1) return fmt(sorted[0])
+  return `${fmt(sorted[0])} ~ ${fmt(sorted[sorted.length - 1])} (${sorted.length}일)`
+}
 
-export default function WorkerMobileApp() {
+type TabId = "home" | "profile"
+
+export default function WorkerDashboard() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<TabId>("home")
 
-  const displayName = session?.user?.name ?? userData.name
+  const [applications, setApplications] = useState<Application[]>([])
+  const [appsLoading, setAppsLoading] = useState(true)
 
-  // ── Job Card Component ──
-  const JobCard = ({ job }: { job: (typeof allJobs)[0] }) => (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {job.urgent && (
-              <Badge className="bg-red-600 text-white text-sm px-2 py-0.5 h-6">
-                <Zap className="h-4 w-4 mr-1" />
-                급구
-              </Badge>
-            )}
-            <span className="text-sm text-gray-500">{job.company}</span>
-          </div>
-          <h3 className="text-base font-semibold text-gray-900">{job.task}</h3>
-        </div>
-        <div className="text-right ml-3">
-          <p className="text-xl font-bold text-blue-600">
-            {(job.pay / 10000).toFixed(0)}만원
-          </p>
-          <p className="text-sm text-gray-500">일당</p>
-        </div>
-      </div>
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const bellRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-      <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-        <span className="flex items-center gap-1">
-          <MapPin className="h-4 w-4" />
-          {job.location} ({job.distance})
-        </span>
-        <span className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          {job.time}
-        </span>
-      </div>
+  const displayName = session?.user?.name ?? "회원"
 
-      {job.sameDay && (
-        <div className="mb-4">
-          <Badge className="bg-emerald-100 text-emerald-700 text-sm px-2 py-0.5 h-6">
-            <Banknote className="h-4 w-4 mr-1" />
-            당일입금
-          </Badge>
-        </div>
-      )}
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications")
+      if (!res.ok) return
+      const data = await res.json()
+      const items: Notification[] = data.notifications ?? []
+      setNotifications(items)
+      setUnreadCount(items.filter((n) => !n.isRead).length)
+    } catch {}
+  }, [])
 
-      <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
-        지원하기
-      </Button>
-    </div>
-  )
+  const fetchApplications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/worker/applications")
+      if (!res.ok) return
+      const data = await res.json()
+      setApplications(Array.isArray(data) ? data : [])
+    } catch {}
+    finally { setAppsLoading(false) }
+  }, [])
 
-  // ── 홈 탭 ──
-  const HomeContent = () => (
-    <main className="px-4 py-6 space-y-6 pb-24">
-      {/* 오늘 추천 공고 */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">오늘 추천 공고</h2>
-        <div className="space-y-4">
-          {recommendedJobs.map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
-        </div>
-      </section>
+  useEffect(() => {
+    fetchNotifications()
+    fetchApplications()
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [fetchNotifications, fetchApplications])
 
-      {/* 내 이번달 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">내 이번달</h3>
-        <p className="text-sm text-gray-500">
-          이번달 근무 <span className="font-semibold text-gray-900">{userData.monthWorkDays}일</span> · 총{" "}
-          <span className="font-semibold text-gray-900">{(userData.monthEarnings / 10000).toFixed(0)}만원</span>
-        </p>
-      </div>
+  useEffect(() => {
+    if (!showNotifications) return
+    function handleClick(e: MouseEvent) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        bellRef.current && !bellRef.current.contains(e.target as Node)
+      ) setShowNotifications(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [showNotifications])
 
-      {/* 공고 더 보기 */}
-      <button
-        onClick={() => setActiveTab("jobs")}
-        className="flex items-center gap-1 text-blue-600 font-semibold text-base h-11"
-      >
-        공고 더 보기
-        <ChevronRight className="h-5 w-5" />
-      </button>
-    </main>
-  )
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    setUnreadCount(0)
+    await fetch("/api/notifications/read-all", { method: "PATCH" }).catch(() => {})
+  }
 
-  // ── 공고찾기 탭 ──
-  const JobsContent = () => (
-    <main className="px-4 py-6 pb-24">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">공고찾기</h2>
-      <div className="space-y-4">
-        {allJobs.map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
-      </div>
-    </main>
-  )
+  const handleMarkOneRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
+    setUnreadCount((c) => Math.max(0, c - 1))
+    await fetch(`/api/notifications/${id}/read`, { method: "PATCH" }).catch(() => {})
+  }
 
-  // ── 내 정보 탭 ──
-  const ProfileContent = () => (
-    <main className="px-4 py-6 pb-24 space-y-6">
-      {/* 프로필 헤더 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src="/placeholder-user.jpg" />
-            <AvatarFallback className="bg-blue-600 text-white text-xl">
-              {(session?.user?.name ?? "사").charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
-            <p className="text-sm text-gray-500">{session?.user?.email ?? userData.email}</p>
-            <p className="text-sm text-gray-500 mt-0.5">가입일: {userData.joinDate}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 신뢰 등급 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-gray-900">신뢰 등급</h3>
-          <Badge className="bg-blue-600 text-white text-sm px-2 py-0.5 h-6">
-            <Trophy className="h-4 w-4 mr-1" />
-            Lv.{userData.level}
-          </Badge>
-        </div>
-        <div className="flex items-end gap-2 mb-3">
-          <span className="text-4xl font-bold text-gray-900">{userData.trustScore}</span>
-          <span className="text-lg text-gray-400 mb-1">/ {userData.nextLevelScore}</span>
-        </div>
-        <Progress value={(userData.trustScore / userData.nextLevelScore) * 100} className="h-3 bg-gray-100" />
-        <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
-          <TrendingUp className="h-4 w-4" />
-          다음 레벨까지 {userData.nextLevelScore - userData.trustScore}점
-        </p>
-      </div>
-
-      {/* 근무 통계 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">근무 통계</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <Calendar className="h-5 w-5 mx-auto mb-2 text-blue-600" />
-            <p className="text-xl font-bold text-gray-900">{userData.totalWorkDays}일</p>
-            <p className="text-sm text-gray-500">총 근무일</p>
-          </div>
-          <div className="text-center">
-            <CheckCircle className="h-5 w-5 mx-auto mb-2 text-emerald-600" />
-            <p className="text-xl font-bold text-gray-900">{userData.completionRate}%</p>
-            <p className="text-sm text-gray-500">완료율</p>
-          </div>
-          <div className="text-center">
-            <Flame className="h-5 w-5 mx-auto mb-2 text-amber-600" />
-            <p className="text-xl font-bold text-gray-900">{userData.streak}일</p>
-            <p className="text-sm text-gray-500">연속 근무</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 출석 상태 예시 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">최근 출석</h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-emerald-600" />
-            <span className="text-sm text-emerald-600 font-medium">출근</span>
-            <span className="text-sm text-gray-500 ml-auto">4/4 (금)</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-emerald-600" />
-            <span className="text-sm text-emerald-600 font-medium">출근</span>
-            <span className="text-sm text-gray-500 ml-auto">4/3 (목)</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <XCircle className="h-5 w-5 text-red-600" />
-            <span className="text-sm text-red-600 font-medium">결근</span>
-            <span className="text-sm text-gray-500 ml-auto">4/2 (수)</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <span className="text-sm text-amber-600 font-medium">대기</span>
-            <span className="text-sm text-gray-500 ml-auto">4/1 (화)</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 레벨 & 배지 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">획득 배지</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {achievements.map((ach) => (
-            <div
-              key={ach.id}
-              className={`text-center p-3 rounded-xl ${!ach.earned ? "opacity-40" : ""}`}
-            >
-              <div
-                className={`h-12 w-12 rounded-full mx-auto mb-2 flex items-center justify-center ${
-                  ach.earned ? "bg-blue-100" : "bg-gray-100"
-                }`}
-              >
-                <ach.icon
-                  className={`h-6 w-6 ${ach.earned ? "text-blue-600" : "text-gray-400"}`}
-                />
-              </div>
-              <p className="text-sm font-medium text-gray-900">{ach.title}</p>
-              <p className="text-sm text-gray-500">{ach.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 메뉴 항목 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {[
-          { icon: User, label: "내 정보 수정" },
-          { icon: Building2, label: "근무 이력" },
-          { icon: FileText, label: "이용약관" },
-          { icon: HelpCircle, label: "고객센터" },
-          { icon: Settings, label: "설정" },
-        ].map((item, idx) => (
-          <button
-            key={item.label}
-            className={`w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px] ${
-              idx > 0 ? "border-t border-gray-100" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <item.icon className="h-5 w-5 text-gray-500" />
-              <span className="text-base text-gray-900">{item.label}</span>
-            </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
-          </button>
-        ))}
-      </div>
-
-      {/* 로그아웃 */}
-      <Button
-        variant="outline"
-        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 h-14 rounded-2xl text-base font-semibold border-0"
-      >
-        <LogOut className="h-5 w-5 mr-2" />
-        로그아웃
-      </Button>
-    </main>
-  )
+  const pendingCount = applications.filter((a) => a.status === "pending").length
+  const acceptedCount = applications.filter((a) => a.status === "accepted").length
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
+    <div className="min-h-screen bg-[#F9FAFB] pb-20">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 px-4 py-4 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between">
+      <header className="px-5 pt-8 pb-2 max-w-3xl mx-auto">
+        <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-gray-500">안녕하세요,</p>
-            <p className="text-lg font-semibold text-gray-900">{displayName}님</p>
+            <Link href="/" className="flex items-center gap-2 mb-3">
+              <span className="font-bold text-gray-900 font-[family-name:var(--font-dm-sans)] tracking-tight">Da-Itda</span>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">
+              안녕하세요, <span className="text-blue-600">{displayName}</span>님
+            </h1>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm text-gray-500">잔액</p>
-              <p className="text-base font-bold text-gray-900">{userData.availableBalance.toLocaleString()}원</p>
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-500 text-white h-11 rounded-2xl text-sm font-semibold px-4">
-              <Wallet className="h-4 w-4 mr-1.5" />
-              출금하기
-            </Button>
+
+          {/* 알림 벨 */}
+          <div className="relative">
+            <button
+              ref={bellRef}
+              onClick={() => setShowNotifications((v) => !v)}
+              className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="알림"
+            >
+              <Bell className="h-6 w-6 text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-sm font-bold leading-none">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div
+                ref={dropdownRef}
+                className="absolute right-0 top-14 w-80 bg-white rounded-2xl border border-gray-100 shadow-lg z-50 overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                  <h3 className="text-base font-bold text-gray-900">알림</h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 min-h-[44px] flex items-center"
+                    >
+                      모두 읽음
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-[360px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="flex items-center justify-center py-10">
+                      <p className="text-sm text-gray-400">새로운 알림이 없습니다</p>
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((noti) => (
+                      <button
+                        key={noti.id}
+                        onClick={() => { if (!noti.isRead) handleMarkOneRead(noti.id) }}
+                        className="w-full text-left px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-0"
+                      >
+                        <div className="flex items-start gap-3">
+                          {!noti.isRead && (
+                            <span className="mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full bg-blue-600" />
+                          )}
+                          <div className={noti.isRead ? "pl-[22px]" : ""}>
+                            <p className="text-base font-semibold text-gray-900 leading-snug">{noti.title}</p>
+                            <p className="text-sm text-gray-500 mt-0.5 leading-snug">{noti.body}</p>
+                            <p className="text-sm text-gray-400 mt-1">{timeAgo(noti.createdAt)}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* 탭 콘텐츠 */}
-      {activeTab === "home" && <HomeContent />}
-      {activeTab === "jobs" && <JobsContent />}
-      {activeTab === "profile" && <ProfileContent />}
+      <main className="max-w-3xl mx-auto px-4 pb-8 space-y-4 mt-4">
+        {activeTab === "home" && (
+          <>
+            {/* 지원 현황 요약 */}
+            <section className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <Hourglass className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-500">검토중</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-amber-600">{pendingCount}</span>
+                  <span className="text-base text-gray-500">건</span>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-500">합격</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-emerald-600">{acceptedCount}</span>
+                  <span className="text-base text-gray-500">건</span>
+                </div>
+              </div>
+            </section>
+
+            {/* 일자리 찾기 CTA */}
+            <section>
+              <Link href="/jobs">
+                <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
+                  <Search className="h-5 w-5 mr-2" />
+                  일자리 찾아보기
+                </Button>
+              </Link>
+            </section>
+
+            {/* 내 지원 내역 */}
+            <section>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">내 지원 내역</h2>
+                {appsLoading ? (
+                  <div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>
+                ) : applications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-4">
+                    <p className="text-base text-gray-400">아직 지원한 공고가 없습니다</p>
+                    <Link href="/jobs">
+                      <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white h-12 px-6 rounded-2xl text-base font-semibold">
+                        <Search className="h-5 w-5" />
+                        일자리 찾아보기
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {applications.map((app) => {
+                      const st = APP_STATUS[app.status] ?? APP_STATUS.pending
+                      const dates = app.selectedDates.length > 0 ? app.selectedDates : app.job.dates
+                      return (
+                        <div key={app.id} className="border border-gray-100 rounded-2xl p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="text-sm text-gray-400">{app.job.category}</p>
+                              <p className="text-base font-bold text-gray-900">{app.job.companyName}</p>
+                            </div>
+                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${st.color}`}>
+                              {st.label}
+                            </span>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MapPin className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                              {app.job.location}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <CalendarDays className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                              {formatDates(dates)}
+                              <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 ml-1" />
+                              {app.job.startTime} ~ {app.job.endTime}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Wallet className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                              <span className="font-semibold text-blue-600">
+                                {app.job.payType === "daily" ? "일급" : "시급"} {app.job.payAmount.toLocaleString()}원
+                              </span>
+                            </div>
+                          </div>
+                          {app.status === "accepted" && (
+                            <div className="mt-3 bg-emerald-50 rounded-xl px-3 py-2.5 text-sm text-emerald-700 font-medium">
+                              🎉 합격했어요! 사장님 연락을 기다려주세요
+                            </div>
+                          )}
+                          <p className="text-xs text-gray-400 mt-2">{timeAgo(app.createdAt)} 지원</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeTab === "profile" && (
+          <>
+            {/* 프로필 카드 */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  {session?.user?.image && <AvatarImage src={session.user.image} />}
+                  <AvatarFallback className="bg-blue-600 text-white text-xl">
+                    {displayName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+                  <p className="text-sm text-gray-500 truncate">{session?.user?.email ?? ""}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 메뉴 */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <Link
+                href="/worker/profile"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px]"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-gray-500" />
+                  <span className="text-base text-gray-900">내 이력서 관리</span>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              </Link>
+              <Link
+                href="/jobs"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px] border-t border-gray-100"
+              >
+                <div className="flex items-center gap-3">
+                  <Search className="h-5 w-5 text-gray-500" />
+                  <span className="text-base text-gray-900">일자리 찾기</span>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              </Link>
+            </div>
+
+            {/* 로그아웃 */}
+            <Button
+              variant="outline"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 h-14 rounded-2xl text-base font-semibold border-0"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              로그아웃
+            </Button>
+          </>
+        )}
+      </main>
 
       {/* 하단 탭 바 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 h-16 z-50 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around max-w-md mx-auto h-full">
-          {([
-            { id: "home" as TabId, icon: Home, label: "홈" },
-            { id: "jobs" as TabId, icon: Search, label: "공고찾기" },
-            { id: "profile" as TabId, icon: User, label: "내 정보" },
-          ]).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center justify-center gap-1 min-h-[44px] min-w-[64px] transition-colors ${
-                activeTab === tab.id ? "text-blue-600" : "text-gray-400"
-              }`}
-            >
-              <tab.icon className="h-6 w-6" />
-              <span className="text-sm font-medium">{tab.label}</span>
-            </button>
-          ))}
+        <div className="max-w-3xl mx-auto flex items-center justify-around h-full px-4">
+          <button
+            onClick={() => setActiveTab("home")}
+            className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
+              activeTab === "home" ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-sm font-medium">홈</span>
+          </button>
+          <Link
+            href="/jobs"
+            className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 text-gray-400"
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-sm font-medium">일자리찾기</span>
+          </Link>
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 ${
+              activeTab === "profile" ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-sm font-medium">내 정보</span>
+          </button>
         </div>
       </nav>
     </div>
