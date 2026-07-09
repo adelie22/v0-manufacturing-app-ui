@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { MapPin, Clock, Calendar, ChevronDown, Wallet, Loader2, X, CalendarDays, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -96,6 +97,7 @@ function formatDateLabel(start: Date, end: Date | undefined) {
 }
 
 export default function HomePage() {
+  const router = useRouter()
   const { data: session } = useSession()
   const [region, setRegion] = useState("전체")
   const [jobs, setJobs] = useState<Job[]>([])
@@ -310,7 +312,11 @@ export default function HomePage() {
           {jobs.map(job => {
             const applied = appliedIds.has(job.id)
             return (
-              <div key={job.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+              <div
+                key={job.id}
+                onClick={() => router.push(`/jobs/${job.id}`)}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer"
+              >
                 {/* 상단 */}
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -386,7 +392,7 @@ export default function HomePage() {
                 {/* 지원 버튼 (비로그인 포함, 사장님 제외) */}
                 {session?.user?.role !== "employer" && (
                   <Button
-                    onClick={() => openApplyDrawer(job)}
+                    onClick={(e) => { e.stopPropagation(); openApplyDrawer(job) }}
                     disabled={applied || applying === job.id}
                     className={`w-full h-11 rounded-2xl text-sm font-semibold ${applied ? "bg-gray-100 text-gray-400" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
                   >
@@ -452,7 +458,7 @@ export default function HomePage() {
           </DrawerHeader>
 
           <div className="overflow-y-auto flex-1">
-            <div className="px-4 flex justify-center">
+            <div className="px-5">
               <CalendarUI
                 mode="range"
                 selected={tempDateRange}
@@ -466,14 +472,46 @@ export default function HomePage() {
                 }}
                 locale={ko}
                 disabled={{ before: new Date() }}
+                showOutsideDays={false}
+                formatters={{
+                  formatCaption: (date) => format(date, "yyyy년 M월", { locale: ko }),
+                }}
                 modifiers={{
                   hasJob: availableDateObjects,
                 }}
                 modifiersClassNames={{
-                  hasJob: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-blue-600",
+                  hasJob: "relative after:absolute after:bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-blue-500 data-[selected=true]:after:bg-white",
                 }}
-                className="w-full"
+                className="w-full max-w-sm mx-auto p-0 py-2 [--cell-size:2.9rem] bg-transparent"
+                classNames={{
+                  root: "w-full",
+                  months: "w-full",
+                  month: "w-full gap-3",
+                  month_caption: "h-11 justify-center",
+                  caption_label: "text-base font-bold text-gray-900",
+                  nav: "h-11",
+                  button_previous: "size-11 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900",
+                  button_next: "size-11 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900",
+                  weekdays: "flex mt-2",
+                  weekday: "flex-1 text-xs font-semibold text-gray-400 pb-1 first:text-red-400 last:text-sky-500",
+                  week: "flex w-full mt-1",
+                  range_start: "rounded-l-full bg-blue-50",
+                  range_middle: "rounded-none bg-blue-50",
+                  range_end: "rounded-r-full bg-blue-50",
+                  today: "[&_button]:font-bold",
+                  disabled: "text-gray-300 opacity-40",
+                  day_button:
+                    "rounded-full text-[0.9rem] font-medium text-gray-700 hover:bg-gray-100 " +
+                    "data-[selected-single=true]:bg-blue-600 data-[selected-single=true]:text-white " +
+                    "data-[range-start=true]:bg-blue-600 data-[range-start=true]:text-white data-[range-start=true]:rounded-full data-[range-start=true]:shadow-md data-[range-start=true]:shadow-blue-200 " +
+                    "data-[range-end=true]:bg-blue-600 data-[range-end=true]:text-white data-[range-end=true]:rounded-full data-[range-end=true]:shadow-md data-[range-end=true]:shadow-blue-200 " +
+                    "data-[range-middle=true]:bg-transparent data-[range-middle=true]:text-blue-700 data-[range-middle=true]:font-semibold",
+                }}
               />
+              <div className="max-w-sm mx-auto flex items-center gap-1.5 mt-1 text-xs text-gray-400">
+                <span className="inline-block h-1 w-1 rounded-full bg-blue-500" />
+                점이 있는 날짜에 공고가 있어요
+              </div>
             </div>
 
             {/* 선택된 날짜 표시 */}
