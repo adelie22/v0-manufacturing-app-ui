@@ -260,7 +260,7 @@ export default function WorkerDashboard() {
 
             {/* 일자리 찾기 CTA */}
             <section>
-              <Link href="/jobs">
+              <Link href="/">
                 <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-2xl text-base font-semibold">
                   <Search className="h-5 w-5 mr-2" />
                   일자리 찾아보기
@@ -277,7 +277,7 @@ export default function WorkerDashboard() {
                 ) : applications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
                     <p className="text-base text-gray-400">아직 지원한 공고가 없습니다</p>
-                    <Link href="/jobs">
+                    <Link href="/">
                       <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white h-12 px-6 rounded-2xl text-base font-semibold">
                         <Search className="h-5 w-5" />
                         일자리 찾아보기
@@ -365,7 +365,7 @@ export default function WorkerDashboard() {
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>
               <Link
-                href="/jobs"
+                href="/"
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px] border-t border-gray-100"
               >
                 <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function WorkerDashboard() {
             <span className="text-sm font-medium">홈</span>
           </button>
           <Link
-            href="/jobs"
+            href="/"
             className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-11 text-gray-400"
           >
             <Search className="h-5 w-5" />

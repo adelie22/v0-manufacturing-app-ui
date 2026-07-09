@@ -77,7 +77,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg">다잇다</span>
           </Link>
           <Link
-            href="/auth/login?callbackUrl=/jobs"
+            href="/auth/login?callbackUrl=/"
             className="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-blue-500 transition-colors"
           >
             무료 시작
@@ -104,7 +104,7 @@ export default function LandingPage() {
 
           {/* 메인 CTA */}
           <Link
-            href="/auth/login?callbackUrl=/jobs"
+            href="/auth/login?callbackUrl=/"
             className="block w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-lg font-bold py-4 rounded-2xl transition-colors shadow-lg shadow-blue-200"
           >
             지금 일자리 찾기
@@ -284,7 +284,7 @@ export default function LandingPage() {
             가입 무료 · 수수료 없음 · 언제든 탈퇴 가능
           </p>
           <Link
-            href="/auth/login?callbackUrl=/jobs"
+            href="/auth/login?callbackUrl=/"
             className="block w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-lg font-bold py-4 rounded-2xl transition-colors shadow-lg shadow-blue-200 mb-4"
           >
             무료로 일자리 찾기
@@ -314,7 +314,7 @@ export default function LandingPage() {
       {/* 모바일 하단 고정 CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 p-4 sm:hidden">
         <Link
-          href="/auth/login?callbackUrl=/jobs"
+          href="/auth/login?callbackUrl=/"
           className="block w-full bg-blue-600 text-white text-base font-bold py-3.5 rounded-2xl text-center"
         >
           무료로 일자리 찾기 →

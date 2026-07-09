@@ -1,615 +1,583 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useState } from "react";
-import { signOut } from "next-auth/react";
-import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import AiPostingChat from "@/components/AiPostingChat";
-import FadeIn from "@/components/FadeIn";
+import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
+import { MapPin, Clock, Calendar, ChevronDown, Wallet, Loader2, X, CalendarDays, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import SiteHeader from "@/components/SiteHeader"
 import {
-  Building2,
-  ArrowRight,
-  Sparkles,
-  Menu,
-  FileText,
-  CreditCard,
-  Search,
-  PlusCircle,
-  ChevronRight,
-  Gift,
-  HardHat,
-  UserX,
-  Scale,
-  EyeOff,
-  Handshake,
-  BadgeCheck,
-  Banknote,
-  CalendarCheck,
-  ShieldCheck,
-  Check,
-} from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
+import { format, parseISO, eachDayOfInterval, isSameDay } from "date-fns"
+import { ko } from "date-fns/locale"
+import type { DateRange } from "react-day-picker"
+import { toast } from "sonner"
+
+const REGIONS = ["전체", "서울", "경기", "인천", "부산", "대구", "대전", "광주", "충북", "충남", "경북", "경남", "전북", "전남"]
+
+interface Job {
+  id: string
+  category: string
+  companyName: string
+  location: string
+  dates: string[]
+  startTime: string
+  endTime: string
+  headcount: number
+  payType: string
+  payAmount: number
+  instantPay: boolean
+  pickup: boolean
+  tasks: string[]
+  requirements?: {
+    skills?: string[]
+    items?: string[]
+    physical?: string[]
+    ageRange?: string
+    customSkills?: string[]
+    customItems?: string[]
+  } | null
+  createdAt: string
+  _count: { applications: number }
+}
+
+function formatJobDates(dates: string[]): string {
+  if (!dates || dates.length === 0) return ""
+  const sorted = [...dates].sort()
+  const parsed = sorted.map(d => parseISO(d))
+
+  // Check if dates are consecutive
+  const isConsecutive = parsed.every((date, i) => {
+    if (i === 0) return true
+    const prev = parsed[i - 1]
+    const diffMs = date.getTime() - prev.getTime()
+    return Math.round(diffMs / (1000 * 60 * 60 * 24)) === 1
+  })
+
+  const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`
+
+  if (parsed.length === 1) {
+    return fmt(parsed[0])
+  }
+
+  if (isConsecutive) {
+    return `${fmt(parsed[0])} ~ ${fmt(parsed[parsed.length - 1])}`
+  }
+
+  // Non-consecutive: show up to 3, then "외 N일"
+  if (parsed.length <= 3) {
+    return parsed.map(fmt).join(", ")
+  }
+  return `${parsed.slice(0, 2).map(fmt).join(", ")} 외 ${parsed.length - 2}일`
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return "방금 전"
+  if (min < 60) return `${min}분 전`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}시간 전`
+  return `${Math.floor(hr / 24)}일 전`
+}
+
+function formatDateLabel(start: Date, end: Date | undefined) {
+  const s = format(start, "M월 d일", { locale: ko })
+  if (!end || isSameDay(start, end)) return s
+  const e = format(end, "M월 d일", { locale: ko })
+  return `${s} ~ ${e}`
+}
 
 export default function HomePage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
-  const { data: session } = useSession();
-  const workerHref = session ? "/jobs" : "/auth/login?callbackUrl=/jobs";
+  const { data: session } = useSession()
+  const [region, setRegion] = useState("전체")
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [applying, setApplying] = useState<string | null>(null)
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set())
 
-  const navItems = [
-    { label: "일자리찾기", href: "/jobs", icon: Search },
-    { label: "공고등록", href: "/employer/post", icon: PlusCircle },
-    { label: "정부지원혜택", href: "/benefits", icon: Gift },
-  ];
+  // 날짜 필터 상태
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [availableDates, setAvailableDates] = useState<string[]>([])
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined)
+
+  const hasDateFilter = !!dateRange?.from
+
+  // 공고 있는 날짜 조회
+  useEffect(() => {
+    const params = region !== "전체" ? `?region=${region}` : ""
+    fetch(`/api/jobs/available-dates${params}`)
+      .then(r => r.json())
+      .then(data => setAvailableDates(data.dates ?? []))
+      .catch(() => {})
+  }, [region])
+
+  // 공고 목록 조회
+  const fetchJobs = useCallback(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (region !== "전체") params.set("region", region)
+    if (dateRange?.from) {
+      params.set("startDate", format(dateRange.from, "yyyy-MM-dd"))
+      params.set("endDate", format(dateRange.to ?? dateRange.from, "yyyy-MM-dd"))
+    }
+    const qs = params.toString()
+    fetch(`/api/jobs${qs ? `?${qs}` : ""}`)
+      .then(r => r.json())
+      .then(data => { setJobs(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [region, dateRange])
+
+  useEffect(() => { fetchJobs() }, [fetchJobs])
+
+  // 지원 확인 드로어
+  const [applyTarget, setApplyTarget] = useState<Job | null>(null)
+  const [applyDates, setApplyDates] = useState<Set<string>>(new Set())
+
+  const openApplyDrawer = (job: Job) => {
+    if (!session) {
+      window.location.href = `/auth/login?callbackUrl=/`
+      return
+    }
+    setApplyTarget(job)
+    setApplyDates(new Set(job.dates)) // 기본: 전체 날짜 가능
+  }
+
+  const toggleApplyDate = (date: string) => {
+    setApplyDates(prev => {
+      const next = new Set(prev)
+      if (next.has(date)) next.delete(date)
+      else next.add(date)
+      return next
+    })
+  }
+
+  const handleApply = async () => {
+    if (!applyTarget) return
+    const jobId = applyTarget.id
+    setApplying(jobId)
+    const res = await fetch(`/api/jobs/${jobId}/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selectedDates: [...applyDates].sort() }),
+    })
+    if (res.ok) {
+      setAppliedIds(prev => new Set([...prev, jobId]))
+      setApplyTarget(null)
+      toast.success("지원 완료!", {
+        description: "사장님이 확인하면 알림으로 알려드릴게요",
+      })
+    } else {
+      const data = await res.json()
+      toast.error(data.error ?? "오류가 발생했습니다")
+    }
+    setApplying(null)
+  }
+
+  const clearDateFilter = () => {
+    setDateRange(undefined)
+    setTempDateRange(undefined)
+  }
+
+  const handleOpenDrawer = () => {
+    setTempDateRange(dateRange)
+    setIsDrawerOpen(true)
+  }
+
+  const handleApplyDate = () => {
+    setDateRange(tempDateRange)
+    setIsDrawerOpen(false)
+  }
+
+  // 공고 있는 날짜에 dot 표시를 위한 modifiers
+  const availableDateObjects = availableDates.map(d => parseISO(d))
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="text-xl font-bold text-foreground font-[family-name:var(--font-dm-sans)] tracking-tight">
-                Da-Itda
-              </span>
-            </Link>
+    <div className="min-h-screen bg-[#F9FAFB]">
+      <SiteHeader />
 
-            {/* Desktop Navigation - right aligned */}
-            <nav className="hidden lg:flex items-center gap-8 ml-auto">
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              {session ? (
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  로그아웃
-                </button>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="text-base font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  로그인
-                </Link>
-              )}
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden ml-auto">
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">메뉴 열기</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:w-80 p-0">
-                  <div className="flex flex-col h-full">
-                    {/* Mobile Menu Header */}
-                    <div className="p-5 border-b border-border">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl font-bold text-foreground font-[family-name:var(--font-dm-sans)] tracking-tight">
-                          Da-Itda
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Mobile Navigation */}
-                    <nav className="flex-1 p-4">
-                      <ul className="space-y-1">
-                        {navItems.map((item) => (
-                          <li key={item.label}>
-                            <Link
-                              href={item.href}
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-center justify-between px-4 py-4 rounded-2xl text-foreground hover:bg-muted transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <item.icon className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">{item.label}</span>
-                              </div>
-                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </Link>
-                          </li>
-                        ))}
-                        <li>
-                          {session ? (
-                            <button
-                              onClick={() => signOut({ callbackUrl: "/" })}
-                              className="w-full flex items-center justify-between px-4 py-4 rounded-2xl text-foreground hover:bg-muted transition-colors"
-                            >
-                              <span className="font-medium">로그아웃</span>
-                            </button>
-                          ) : (
-                            <Link
-                              href="/auth/login"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-center justify-between px-4 py-4 rounded-2xl text-blue-600 hover:bg-muted transition-colors"
-                            >
-                              <span className="font-medium">로그인</span>
-                              <ChevronRight className="h-5 w-5" />
-                            </Link>
-                          )}
-                        </li>
-                      </ul>
-                    </nav>
-                  </div>
-                </SheetContent>
-              </Sheet>
+      {/* 트라이얼 채용 소개 스트립 */}
+      <section className="bg-gradient-to-r from-slate-900 to-slate-800">
+        <div className="max-w-4xl mx-auto px-4 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-white font-bold text-base sm:text-lg leading-snug">
+                면접 대신, <span className="text-blue-400">3일 일해보고 결정하세요</span>
+              </p>
+              <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+                지원 · 매칭 → 3~7일 근무 → 서로 맞으면 정규직 전환
+              </p>
             </div>
+            <Link
+              href="/business"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-blue-400 hover:text-blue-300 shrink-0"
+            >
+              트라이얼 채용 알아보기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-background pt-16 pb-20 md:pt-28 md:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full mb-6">
-              <HardHat className="h-4 w-4" />
-              중소 제조현장 전문 채용 플랫폼
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] mb-6 tracking-tight text-balance">
-              면접 대신,
-              <br />
-              <span className="text-blue-600">3일 일해보고 결정하세요</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
-              3~7일 트라이얼 근무 후 서로 맞으면 정규직으로.
-              <br className="hidden sm:block" />
-              사장님도 구직자도, 부담은 빼고 확신만 남깁니다.
-            </p>
+      <main className="max-w-4xl mx-auto px-4 py-6 pb-32">
+        <h1 className="text-xl font-bold text-gray-900 mb-4">지역과 날짜를 선택해서 일을 찾아보세요</h1>
 
-            {/* Trial process pill */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 max-w-2xl mx-auto mb-12">
-              {[
-                { step: "1", label: "지원 · 매칭", sub: "이력서 대신 현장으로" },
-                { step: "2", label: "3~7일 근무", sub: "일해보며 서로 확인" },
-                { step: "3", label: "정규직 전환", sub: "서로 맞을 때만" },
-              ].map((item, i) => (
-                <div key={item.step} className="flex items-center flex-1">
-                  <div className="flex-1 bg-white border border-border/80 rounded-2xl px-4 py-3.5 text-left shadow-sm">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold font-[family-name:var(--font-dm-sans)]">
-                        {item.step}
-                      </span>
-                      <div>
-                        <p className="text-sm font-bold text-foreground leading-tight">{item.label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.sub}</p>
-                      </div>
+        {/* 필터 바 */}
+        <div className="flex gap-2 mb-4">
+          {/* 지역 필터 */}
+          <div className="relative flex-1">
+            <select
+              value={region}
+              onChange={e => setRegion(e.target.value)}
+              className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {REGIONS.map(r => <option key={r}>{r}</option>)}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* 날짜 필터 버튼 */}
+          <button
+            onClick={handleOpenDrawer}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-colors whitespace-nowrap ${
+              hasDateFilter
+                ? "bg-blue-600 border-blue-600 text-white"
+                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            <CalendarDays className="h-4 w-4" />
+            {hasDateFilter
+              ? formatDateLabel(dateRange!.from!, dateRange?.to)
+              : "날짜 선택"}
+          </button>
+        </div>
+
+        {/* 활성 필터 칩 */}
+        {hasDateFilter && (
+          <div className="flex items-center gap-2 mb-4 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 rounded-full px-4 py-2 text-sm font-medium">
+              <CalendarDays className="h-4 w-4" />
+              {formatDateLabel(dateRange!.from!, dateRange?.to)} 근무 공고 {jobs.length}건
+              <button onClick={clearDateFilter} className="ml-1 hover:bg-blue-100 rounded-full p-0.5 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 로딩 */}
+        {loading && (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
+        )}
+
+        {/* 공고 없음 */}
+        {!loading && jobs.length === 0 && (
+          <div className="text-center py-20 text-gray-400">
+            {hasDateFilter ? (
+              <>
+                <p className="text-lg font-medium mb-2 text-gray-600">
+                  {formatDateLabel(dateRange!.from!, dateRange?.to)}에 {region !== "전체" ? `[${region}]` : ""} 공고가 없어요
+                </p>
+                <p className="text-sm mb-6">날짜를 변경하거나 지역을 바꿔보세요</p>
+                <Button
+                  onClick={handleOpenDrawer}
+                  className="bg-blue-600 hover:bg-blue-500 text-white h-11 rounded-2xl px-6 text-sm font-semibold"
+                >
+                  날짜 다시 선택하기
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-lg font-medium mb-2">등록된 공고가 없습니다</p>
+                <p className="text-sm">다른 지역을 선택하거나 나중에 다시 확인해보세요</p>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* 공고 목록 */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {jobs.map(job => {
+            const applied = appliedIds.has(job.id)
+            return (
+              <div key={job.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                {/* 상단 */}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-bold">일손</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">{job.category}</p>
+                      <p className="font-semibold text-gray-900 text-sm">{job.companyName}</p>
                     </div>
                   </div>
-                  {i < 2 && (
-                    <ArrowRight className="hidden sm:block h-4 w-4 text-blue-300 mx-1.5 shrink-0" />
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm text-gray-400">{timeAgo(job.createdAt)}</p>
+                    <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                      <span>{job.location.split(" ").slice(-1)[0]}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 날짜/시간/급여 */}
+                <div className="space-y-1.5 mt-3 mb-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{formatJobDates(job.dates)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{job.startTime} ~ {job.endTime}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Wallet className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-blue-600">
+                      {job.payType === "daily" ? "일급" : "시급"} {job.payAmount.toLocaleString()}원
+                    </span>
+                    {job.instantPay && (
+                      <span className="text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        당일지급보장
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 태그 */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {job.tasks.map(tag => (
+                    <span key={tag} className="text-sm bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">{tag}</span>
+                  ))}
+                  {job.pickup && (
+                    <span className="text-sm bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">픽업제공</span>
                   )}
                 </div>
-              ))}
-            </div>
 
-            {/* Selection Cards */}
-            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto pt-8">
-              <div className="relative">
-                {/* AI 말풍선 */}
-                <button
-                  onClick={() => setAiChatOpen(true)}
-                  className="absolute -top-12 left-2 z-10 animate-bounce"
-                  style={{ animationDuration: "2s" }}
-                >
-                  <div className="relative bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    챗봇으로 간편하게 공고등록
-                    <span className="absolute -bottom-1.5 left-4 w-3 h-3 bg-blue-600 rotate-45 rounded-sm" />
+                {/* 요구사항 요약 */}
+                {job.requirements && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {job.requirements.skills?.includes("초보 가능") && (
+                      <span className="text-sm font-medium bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg">초보가능</span>
+                    )}
+                    {(job.requirements.items && job.requirements.items.length > 0) && (
+                      <span className="text-sm bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg">
+                        준비: {job.requirements.items.slice(0, 2).join(", ")}{job.requirements.items.length > 2 ? ` 외 ${job.requirements.items.length - 2}` : ""}
+                      </span>
+                    )}
+                    {(job.requirements.skills && job.requirements.skills.filter(s => s !== "초보 가능").length > 0) && (
+                      <span className="text-sm bg-violet-50 text-violet-700 px-2.5 py-1 rounded-lg">
+                        우대: {job.requirements.skills.filter(s => s !== "초보 가능").slice(0, 2).join(", ")}
+                      </span>
+                    )}
                   </div>
-                </button>
+                )}
 
-                <Link
-                  href="/auth/login?callbackUrl=/employer"
-                  className="group block h-full rounded-3xl bg-white border border-border/80 hover:border-blue-300 hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="p-6 h-full flex flex-col justify-between">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                        <Building2 className="h-7 w-7 text-blue-600" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-lg font-semibold text-foreground">사장님</h3>
-                        <p className="text-sm text-muted-foreground">
-                          일 잘하는 사람, 일로 확인하세요
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-blue-600 font-medium">
-                      <span>시작하기</span>
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </Link>
+                {/* 지원 버튼 (비로그인 포함, 사장님 제외) */}
+                {session?.user?.role !== "employer" && (
+                  <Button
+                    onClick={() => openApplyDrawer(job)}
+                    disabled={applied || applying === job.id}
+                    className={`w-full h-11 rounded-2xl text-sm font-semibold ${applied ? "bg-gray-100 text-gray-400" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                  >
+                    {applying === job.id ? <Loader2 className="h-4 w-4 animate-spin" /> : applied ? "지원완료" : "지원하기"}
+                  </Button>
+                )}
               </div>
+            )
+          })}
+        </div>
+      </main>
 
-              <Link
-                href={workerHref}
-                className="group block rounded-3xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="p-6 h-full flex flex-col justify-between">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                      <HardHat className="h-7 w-7 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-lg font-semibold text-white">구직자</h3>
-                      <p className="text-sm text-blue-200">
-                        며칠 일해보고 좋은 곳만 고르세요
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-white font-medium">
-                    <span>시작하기</span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </Link>
-            </div>
+      {/* 날짜 선택 플로팅 버튼 (하단 중앙) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <button
+          onClick={handleOpenDrawer}
+          className={`flex items-center gap-2 px-5 py-3.5 rounded-full shadow-lg text-sm font-semibold transition-all duration-200 ${
+            hasDateFilter
+              ? "bg-blue-600 text-white"
+              : "bg-gray-900 text-white"
+          }`}
+        >
+          <CalendarDays className="h-5 w-5" />
+          {hasDateFilter
+            ? <>{formatDateLabel(dateRange!.from!, dateRange?.to)} 근무 공고<button onClick={(e) => { e.stopPropagation(); clearDateFilter() }} className="ml-2 hover:bg-white/20 rounded-full p-0.5"><X className="h-4 w-4" /></button></>
+            : "일하고 싶은 날짜를 선택하세요"
+          }
+        </button>
+      </div>
+
+      {/* 사장님 플로팅 CTA (우하단) */}
+      {session?.user?.role !== "employer" && (
+        <div className="fixed bottom-6 right-4 z-40">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-lg px-4 py-3">
+            <p className="text-sm text-gray-500">사장님이신가요?</p>
+            <Link href="/business" className="text-sm font-bold text-blue-600 flex items-center gap-1">
+              무료로 채용 시작하기 →
+            </Link>
           </div>
         </div>
+      )}
 
-        {/* Decorative Background Elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40 pointer-events-none" />
-      </section>
-
-      {/* Problem - dark section */}
-      <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-900">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-14">
-              <span className="inline-block text-sm font-semibold text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-full mb-4">
-                왜 다잇다인가
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug tracking-tight text-balance">
-                지금의 채용 방식은
-                <br />
-                중소 제조현장에 맞지 않습니다
-              </h2>
+      {/* 날짜 선택 바텀시트 */}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="bg-white">
+          <DrawerHeader className="text-left">
+            <div className="flex items-center justify-between">
+              <div>
+                <DrawerTitle className="text-lg font-bold text-gray-900">일하고 싶은 날짜를 선택하세요</DrawerTitle>
+                <DrawerDescription className="text-sm text-gray-500 mt-1">
+                  날짜 범위를 선택할 수 있어요 (최대 5일)
+                </DrawerDescription>
+              </div>
+              {tempDateRange?.from && (
+                <button
+                  onClick={() => setTempDateRange(undefined)}
+                  className="text-sm text-gray-500 hover:text-gray-700 font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  초기화
+                </button>
+              )}
             </div>
-          </FadeIn>
+          </DrawerHeader>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              {
-                icon: UserX,
-                title: "뽑아도 한 달을 못 갑니다",
-                desc: "어렵게 뽑은 직원이 통보 없이 사라지거나 며칠 만에 퇴사를 말합니다. 4대보험, 서류, 인수인계… 행정 피로만 쌓입니다.",
-              },
-              {
-                icon: Scale,
-                title: "한번 뽑으면 되돌리기 어렵습니다",
-                desc: "막상 일을 시켜보니 맞지 않아도, 법적으로 해고는 쉽지 않습니다. 채용 실패의 비용을 사장님 혼자 떠안습니다.",
-              },
-              {
-                icon: EyeOff,
-                title: "구직자는 들어가봐야 압니다",
-                desc: "작업 환경도, 분위기도 입사 전엔 알 수 없습니다. 실망하면 남는 선택지는 도망치듯 그만두는 것뿐입니다.",
-              },
-            ].map((item, i) => (
-              <FadeIn key={item.title} delay={i * 120}>
-                <div className="h-full bg-slate-800/60 border border-slate-700/60 rounded-3xl p-7">
-                  <div className="h-12 w-12 rounded-2xl bg-slate-700/80 flex items-center justify-center mb-5">
-                    <item.icon className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-3">{item.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+          <div className="overflow-y-auto flex-1">
+            <div className="px-4 flex justify-center">
+              <CalendarUI
+                mode="range"
+                selected={tempDateRange}
+                onSelect={(range) => {
+                  // 최대 5일 제한
+                  if (range?.from && range?.to) {
+                    const days = eachDayOfInterval({ start: range.from, end: range.to })
+                    if (days.length > 5) return
+                  }
+                  setTempDateRange(range)
+                }}
+                locale={ko}
+                disabled={{ before: new Date() }}
+                modifiers={{
+                  hasJob: availableDateObjects,
+                }}
+                modifiersClassNames={{
+                  hasJob: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-blue-600",
+                }}
+                className="w-full"
+              />
+            </div>
+
+            {/* 선택된 날짜 표시 */}
+            {tempDateRange?.from && (
+              <div className="px-4 mt-2">
+                <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium text-center">
+                  선택: {formatDateLabel(tempDateRange.from, tempDateRange.to)}
+                  {tempDateRange.to && !isSameDay(tempDateRange.from, tempDateRange.to) && (
+                    <span className="text-blue-500 ml-1">
+                      ({eachDayOfInterval({ start: tempDateRange.from, end: tempDateRange.to }).length}일)
+                    </span>
+                  )}
                 </div>
-              </FadeIn>
-            ))}
+              </div>
+            )}
           </div>
 
-          <FadeIn delay={200}>
-            <div className="mt-14 text-center">
-              <p className="text-xl md:text-2xl font-bold text-white leading-relaxed text-balance">
-                그래서 순서를 바꿨습니다.
-                <br />
-                <span className="text-blue-400">먼저 일해보고, 그다음에 채용합니다.</span>
-              </p>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+          <DrawerFooter>
+            <Button
+              onClick={handleApplyDate}
+              disabled={!tempDateRange?.from}
+              className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-base font-semibold disabled:opacity-50"
+            >
+              {tempDateRange?.from
+                ? `이 날짜로 공고 보기`
+                : "날짜를 선택해주세요"
+              }
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
-      {/* How it works */}
-      <section className="px-4 sm:px-6 py-20 md:py-28">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-14">
-              <span className="inline-block text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full mb-4">
-                트라이얼 채용
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug tracking-tight text-balance">
-                3~7일이면 서로를 알 수 있습니다
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed">
-                현장 일은 몇 시간만 같이 해봐도 압니다.
-                짧게 일해보고 확신이 들 때만 정규직으로 전환하세요.
-              </p>
-            </div>
-          </FadeIn>
+      {/* 지원 확인 바텀시트 */}
+      <Drawer open={!!applyTarget} onOpenChange={(open) => { if (!open) setApplyTarget(null) }}>
+        <DrawerContent className="bg-white">
+          {applyTarget && (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle className="text-lg font-bold text-gray-900">
+                  {applyTarget.companyName}에 지원하기
+                </DrawerTitle>
+                <DrawerDescription className="text-sm text-gray-500 mt-1">
+                  일할 수 있는 날짜를 확인해주세요. 못 가는 날은 눌러서 빼면 돼요.
+                </DrawerDescription>
+              </DrawerHeader>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              {
-                step: "STEP 1",
-                icon: CalendarCheck,
-                title: "공고 올리고, 지원하고",
-                desc: "사장님은 챗봇으로 1분 만에 공고 등록. 구직자는 복잡한 이력서 없이 원하는 날짜에 바로 지원합니다.",
-                points: ["AI 챗봇 공고 등록", "날짜 기반 간편 지원"],
-              },
-              {
-                step: "STEP 2",
-                icon: Banknote,
-                title: "3~7일 트라이얼 근무",
-                desc: "일용직으로 짧게 근무하며 서로를 확인합니다. 안 맞으면 기간이 끝나면 자연스럽게 종료 — 서로 부담이 없습니다.",
-                points: ["원하는 날짜만 골라 근무", "부담 없는 종료"],
-              },
-              {
-                step: "STEP 3",
-                icon: Handshake,
-                title: "서로 맞으면 정규직 전환",
-                desc: "양쪽 모두 원할 때만 정규직 제안이 성사됩니다. 전환 시 받을 수 있는 정부지원금까지 다잇다가 챙겨드립니다.",
-                points: ["상호 합의 전환", "정부지원혜택 알림"],
-              },
-            ].map((item, i) => (
-              <FadeIn key={item.step} delay={i * 120}>
-                <div className="h-full bg-white border border-border/80 rounded-3xl p-7 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-                      <item.icon className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <span className="text-xs font-bold text-blue-500 tracking-widest font-[family-name:var(--font-dm-sans)]">
-                      {item.step}
+              <div className="px-4 pb-2 overflow-y-auto">
+                {/* 공고 요약 */}
+                <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                    {applyTarget.location}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-3.5 w-3.5 text-gray-400" />
+                    {applyTarget.startTime} ~ {applyTarget.endTime}
+                    <span className="font-semibold text-blue-600 ml-1">
+                      {applyTarget.payType === "daily" ? "일급" : "시급"} {applyTarget.payAmount.toLocaleString()}원
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-3">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{item.desc}</p>
-                  <ul className="space-y-2">
-                    {item.points.map((p) => (
-                      <li key={p} className="flex items-center gap-2 text-sm text-foreground">
-                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Both sides value */}
-      <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-50">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug tracking-tight text-balance">
-                양쪽 모두에게 남는 거래
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <FadeIn>
-              <div className="h-full bg-white border border-border/80 rounded-3xl p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground">사장님에게는</h3>
+                {/* 날짜 토글 */}
+                <div className="flex flex-wrap gap-2">
+                  {[...applyTarget.dates].sort().map(date => {
+                    const selected = applyDates.has(date)
+                    const d = parseISO(date)
+                    return (
+                      <button
+                        key={date}
+                        onClick={() => toggleApplyDate(date)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                          selected
+                            ? "border-blue-600 bg-blue-50 text-blue-700"
+                            : "border-gray-200 bg-white text-gray-400"
+                        }`}
+                      >
+                        {format(d, "M/d (EEE)", { locale: ko })}
+                      </button>
+                    )
+                  })}
                 </div>
-                <ul className="space-y-4">
-                  {[
-                    ["채용 실패 리스크 제로", "일하는 걸 직접 보고 뽑으니, 뽑고 후회할 일이 없습니다."],
-                    ["해고 걱정 없는 검증 기간", "트라이얼은 일용직 계약 — 안 맞으면 다음 사람을 만나면 됩니다."],
-                    ["지원 즉시 실시간 알림", "지원자가 생기면 바로 알림으로 확인하고 수락하세요."],
-                    ["정규직 전환 지원금", "전환 시 받을 수 있는 정부지원혜택을 모아서 알려드립니다."],
-                  ].map(([title, desc]) => (
-                    <li key={title} className="flex gap-3">
-                      <BadgeCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold text-foreground">{title}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                {applyDates.size === 0 && (
+                  <p className="text-sm text-red-500 mt-3">최소 1일 이상 선택해주세요</p>
+                )}
               </div>
-            </FadeIn>
 
-            <FadeIn delay={120}>
-              <div className="h-full bg-slate-900 rounded-3xl p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <HardHat className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white">구직자에게는</h3>
-                </div>
-                <ul className="space-y-4">
-                  {[
-                    ["들어가보고 결정", "작업 환경·분위기·사람들, 며칠 일해보고 판단하세요."],
-                    ["합격 소식 실시간 알림", "지원 결과를 기다릴 필요 없이 앱에서 바로 확인하세요."],
-                    ["어색한 퇴사 통보 불필요", "기간이 끝나면 자연스럽게 종료. 도망칠 필요가 없습니다."],
-                    ["여러 곳을 겪어보고 선택", "맞는 곳을 찾을 때까지, 가벼운 마음으로 옮겨 다니세요."],
-                  ].map(([title, desc]) => (
-                    <li key={title} className="flex gap-3">
-                      <BadgeCheck className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold text-white">{title}</p>
-                        <p className="text-sm text-slate-400 mt-0.5 leading-relaxed">{desc}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </FadeIn>
-          </div>
-
-          {/* 정부지원혜택 banner */}
-          <FadeIn delay={200}>
-            <Link
-              href="/benefits"
-              className="group mt-5 flex items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 p-6 md:p-7"
-            >
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Gift className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white font-bold text-base md:text-lg">
-                    정규직 채용 시 받을 수 있는 정부지원혜택
-                  </p>
-                  <p className="text-emerald-50 text-sm mt-0.5">
-                    고용장려금부터 세제 혜택까지, 한곳에 모았습니다
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="h-6 w-6 text-white shrink-0 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section className="px-4 sm:px-6 py-16 md:py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              {
-                icon: ShieldCheck,
-                title: "사업자 인증 사업장",
-                desc: "사업자등록번호 인증을 거친 사장님만 공고를 올립니다",
-              },
-              {
-                icon: BadgeCheck,
-                title: "실시간 지원·합격 알림",
-                desc: "지원과 합격 소식을 놓치지 않게 바로 알려드립니다",
-              },
-              {
-                icon: CalendarCheck,
-                title: "날짜 기반 간편 지원",
-                desc: "이력서 부담 없이, 일할 수 있는 날짜만 골라 지원합니다",
-              },
-            ].map((item, i) => (
-              <FadeIn key={item.title} delay={i * 100}>
-                <div className="flex items-center gap-4 bg-slate-50 rounded-2xl px-6 py-5">
-                  <div className="h-11 w-11 rounded-xl bg-white border border-border/60 flex items-center justify-center shrink-0">
-                    <item.icon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{item.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="px-4 sm:px-6 py-20 md:py-28 bg-slate-900">
-        <div className="max-w-3xl mx-auto text-center">
-          <FadeIn>
-            <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug tracking-tight mb-4 text-balance">
-              사람 때문에 고민하는 시간,
-              <br />
-              <span className="text-blue-400">3일이면 충분합니다</span>
-            </h2>
-            <p className="text-base md:text-lg text-slate-400 mb-10 leading-relaxed">
-              대한민국 뿌리산업의 채용, 다잇다가 다시 잇습니다.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/auth/login?callbackUrl=/employer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-13 px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors"
-              >
-                사장님으로 시작하기
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href={workerHref}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-13 px-8 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
-              >
-                구직자로 시작하기
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* AI 공고 등록 챗봇 */}
-      {aiChatOpen && <AiPostingChat onClose={() => setAiChatOpen(false)} />}
-
-      {/* Footer */}
-      <footer className="px-4 sm:px-6 py-16 bg-slate-950">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 gap-8 mb-12 max-w-lg">
-            <div>
-              <h3 className="font-semibold text-white mb-4">서비스</h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
-                <li>
-                  <Link href="/jobs" className="hover:text-white transition-colors">
-                    일자리찾기
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/employer" className="hover:text-white transition-colors">
-                    공고등록
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/benefits" className="hover:text-white transition-colors">
-                    정부지원혜택
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-4">법적 고지</h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
-                <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
-                    이용약관
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy" className="hover:text-white transition-colors">
-                    개인정보처리방침
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-slate-800 text-center">
-            <div className="flex items-center justify-center gap-2.5 mb-4">
-              <span className="text-xl font-bold text-white font-[family-name:var(--font-dm-sans)] tracking-tight">
-                Da-Itda
-              </span>
-            </div>
-            <p className="text-slate-500 text-sm">
-              다잇다 — 일해보고 채용하는 중소 제조현장 전문 플랫폼
-            </p>
-          </div>
-        </div>
-      </footer>
+              <DrawerFooter>
+                <Button
+                  onClick={handleApply}
+                  disabled={applyDates.size === 0 || applying === applyTarget.id}
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-base font-semibold disabled:opacity-50"
+                >
+                  {applying === applyTarget.id ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    `${applyDates.size}일 근무 가능으로 지원하기`
+                  )}
+                </Button>
+              </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
-  );
+  )
 }

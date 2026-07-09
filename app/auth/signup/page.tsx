@@ -107,7 +107,7 @@ export default function SignupPage() {
       }
 
       await update()
-      router.push(role === "employer" ? "/employer" : "/jobs")
+      router.push(role === "employer" ? "/employer" : "/")
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다")
     } finally {

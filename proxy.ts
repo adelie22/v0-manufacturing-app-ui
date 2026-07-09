@@ -10,6 +10,7 @@ const publicPaths = [
   "/api/jobs", // 공고 목록/상세 조회는 공개 (지원 POST는 라우트에서 검증)
   "/api/reservation", // 사전예약
   "/jobs",
+  "/business",
   "/lp",
   "/benefits",
   "/api/benefits",

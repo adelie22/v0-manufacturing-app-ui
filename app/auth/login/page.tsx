@@ -19,7 +19,7 @@ function LoginForm() {
       const role = (session.user as { role?: string }).role
       const dest =
         callbackUrl === "/"
-          ? role === "employer" ? "/employer" : role === "worker" ? "/jobs" : "/"
+          ? role === "employer" ? "/employer" : "/"
           : callbackUrl
       router.replace(dest)
     }
